@@ -9,6 +9,12 @@ import s01 from "@/data/scenarios/s01.json";
 import s02 from "@/data/scenarios/s02.json";
 import s03 from "@/data/scenarios/s03.json";
 import s04 from "@/data/scenarios/s04.json";
+import s05 from "@/data/scenarios/s05.json";
+import s07 from "@/data/scenarios/s07.json";
+import s08 from "@/data/scenarios/s08.json";
+import s09 from "@/data/scenarios/s09.json";
+import s10 from "@/data/scenarios/s10.json";
+import s12 from "@/data/scenarios/s12.json";
 
 import type { Scenario } from "@/types/agent-data";
 
@@ -17,6 +23,12 @@ const SCENARIOS: Record<string, Scenario> = {
   s02: s02 as unknown as Scenario,
   s03: s03 as unknown as Scenario,
   s04: s04 as unknown as Scenario,
+  s05: s05 as unknown as Scenario,
+  s07: s07 as unknown as Scenario,
+  s08: s08 as unknown as Scenario,
+  s09: s09 as unknown as Scenario,
+  s10: s10 as unknown as Scenario,
+  s12: s12 as unknown as Scenario,
 };
 
 interface AgentLoopSimulatorProps {

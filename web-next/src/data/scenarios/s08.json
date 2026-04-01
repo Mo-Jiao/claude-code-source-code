@@ -1,56 +1,47 @@
 {
   "version": "s08",
-  "title": "Background Tasks",
-  "description": "Agent executes long-running tasks in background threads",
+  "title": "Memory 系统加载与写入",
+  "description": "CLAUDE.md 在会话启动时加载规则，Auto Memory 在对话中自动保存用户偏好",
   "steps": [
     {
+      "type": "system_event",
+      "content": "会话启动 — 加载 Memory 系统",
+      "annotation": "Memory 系统在每次会话开始时自动激活"
+    },
+    {
+      "type": "system_event",
+      "content": "扫描 CLAUDE.md 文件:\n1. ~/.claude/CLAUDE.md (全局规则)\n2. /project/CLAUDE.md (项目规则)\n3. /project/src/CLAUDE.md (目录规则)",
+      "annotation": "CLAUDE.md 按层级扫描：全局 → 项目根目录 → 当前工作目录的各级父目录"
+    },
+    {
+      "type": "system_event",
+      "content": "合并 3 个 CLAUDE.md → 注入系统提示词 Layer 3",
+      "annotation": "所有 CLAUDE.md 内容合并后注入系统提示词的第三层(用户/项目规则层)，每次对话都生效"
+    },
+    {
       "type": "user_message",
-      "content": "Run the test suite and while it's running, fix the linting errors",
-      "annotation": "Two tasks that can run concurrently"
+      "content": "我们的 API 统一用 snake_case",
+      "annotation": "用户表达了一个编码偏好/项目约定"
     },
     {
       "type": "assistant_text",
-      "content": "I'll start the tests in the background and fix linting in parallel.",
-      "annotation": "Agent recognizes opportunity for concurrent execution"
-    },
-    {
-      "type": "tool_call",
-      "content": "pytest tests/ -v --timeout=300",
-      "toolName": "background_task",
-      "annotation": "BackgroundManager spawns a thread for long-running test suite"
+      "content": "好的，我记住了。API 接口统一使用 snake_case 命名风格。",
+      "annotation": "Agent 确认理解了用户偏好"
     },
     {
       "type": "system_event",
-      "content": "[BackgroundManager] Thread spawned: task_001\nRunning: pytest tests/ -v --timeout=300\nStatus: in_progress",
-      "annotation": "Thread is running independently -- main loop continues"
-    },
-    {
-      "type": "tool_result",
-      "content": "Background task started: task_001",
-      "toolName": "background_task",
-      "annotation": "Control returns immediately to the agent"
-    },
-    {
-      "type": "tool_call",
-      "content": "ruff check --fix .",
-      "toolName": "bash",
-      "annotation": "Agent works on linting while tests run in background"
-    },
-    {
-      "type": "tool_result",
-      "content": "Fixed 12 linting errors in 5 files",
-      "toolName": "bash",
-      "annotation": "Linting fixed concurrently with tests"
+      "content": "Auto Memory 触发:\n检测到用户偏好 → 写入 ~/.claude/memory/feedback_api_style.md\n---\nname: API 命名风格\ntype: feedback\n---\nAPI 统一使用 snake_case",
+      "annotation": "Auto Memory 自动检测用户偏好和反馈，以 markdown 文件形式持久化存储"
     },
     {
       "type": "system_event",
-      "content": "[Notification] Background task_001 completed\nResult: 47 tests passed, 2 failed\nFailed: test_auth.py::test_token_expiry, test_api.py::test_rate_limit",
-      "annotation": "Background thread notifies main loop via notification queue"
+      "content": "更新 MEMORY.md 索引:\n- [API 命名风格](feedback_api_style.md) — snake_case",
+      "annotation": "MEMORY.md 作为索引文件，记录所有自动保存的记忆条目"
     },
     {
       "type": "assistant_text",
-      "content": "Linting is fixed. Tests finished: 47 passed, 2 failed. I'll fix the failing tests now.",
-      "annotation": "Non-blocking execution via threads + queue enables parallel work"
+      "content": "已保存到记忆系统，后续对话我会遵循 snake_case 规范。",
+      "annotation": "两套互补机制：规则类内容(编码规范、项目结构)写入 CLAUDE.md 由用户维护；事实类内容(用户偏好、反馈)由 Auto Memory 自动保存"
     }
   ]
 }

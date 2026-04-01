@@ -1,53 +1,78 @@
 {
   "version": "s07",
-  "title": "Tasks",
-  "description": "Agent uses persistent file-based tasks with dependencies",
+  "title": "三层压缩触发",
+  "description": "上下文增长时 Micro、Auto、Manual 三层压缩机制如何依次介入",
   "steps": [
     {
+      "type": "system_event",
+      "content": "当前上下文: 15,000 tokens (阈值: 80,000)",
+      "annotation": "会话开始时上下文较小，三层压缩均未触发"
+    },
+    {
       "type": "user_message",
-      "content": "Build a REST API with user auth, database, and deployment config",
-      "annotation": "Multi-part task requiring dependency tracking"
-    },
-    {
-      "type": "tool_call",
-      "content": "create_task(\"Set up database schema\", deps=[])\ncreate_task(\"Implement user model\", deps=[1])\ncreate_task(\"Add auth endpoints\", deps=[2])\ncreate_task(\"Write deployment config\", deps=[3])",
-      "toolName": "task_manager",
-      "annotation": "TaskManager creates file-based tasks with explicit dependencies"
-    },
-    {
-      "type": "tool_result",
-      "content": "Created 4 tasks in .tasks/\n  #1 Set up database schema [ready]\n  #2 Implement user model [blocked by #1]\n  #3 Add auth endpoints [blocked by #2]\n  #4 Write deployment config [blocked by #3]",
-      "toolName": "task_manager",
-      "annotation": "Tasks persisted to .tasks/ directory as JSON files"
-    },
-    {
-      "type": "tool_call",
-      "content": "schema.sql\n---\nCREATE TABLE users (id SERIAL PRIMARY KEY, email TEXT UNIQUE, password_hash TEXT);",
-      "toolName": "write_file",
-      "annotation": "Working on task #1"
-    },
-    {
-      "type": "tool_result",
-      "content": "File written successfully",
-      "toolName": "write_file",
-      "annotation": "Schema created"
-    },
-    {
-      "type": "tool_call",
-      "content": "complete_task(1)",
-      "toolName": "task_manager",
-      "annotation": "Completing task #1 automatically unblocks task #2"
-    },
-    {
-      "type": "tool_result",
-      "content": "Task #1 completed. Task #2 is now ready.",
-      "toolName": "task_manager",
-      "annotation": "File-based persistence outlives process memory"
+      "content": "帮我重构整个 auth 模块",
+      "annotation": "大型重构任务会产生大量上下文"
     },
     {
       "type": "assistant_text",
-      "content": "Database schema is done. Moving to user model implementation.",
-      "annotation": "Dependency graph ensures tasks execute in correct order"
+      "content": "让我先了解现有的认证架构...",
+      "annotation": "Agent 开始探索代码库"
+    },
+    {
+      "type": "tool_call",
+      "content": "读取 src/auth/login.ts, src/auth/session.ts, src/auth/middleware.ts, src/auth/types.ts, src/auth/utils.ts",
+      "toolName": "Read",
+      "annotation": "批量读取文件会产生大量 token"
+    },
+    {
+      "type": "tool_result",
+      "content": "[5,000 tokens 的文件内容...]",
+      "toolName": "Read",
+      "annotation": "工具返回大量代码内容"
+    },
+    {
+      "type": "system_event",
+      "content": "Micro 压缩触发: 工具结果超过阈值\n- 截断 Read 结果: 5,000 → 2,000 tokens\n- 零 API 调用开销",
+      "annotation": "第一层 Micro 压缩：纯字符串截断，不调用 LLM，零额外开销。对超长工具结果自动裁剪"
+    },
+    {
+      "type": "tool_call",
+      "content": "grep -r \"authenticate\" src/auth/",
+      "toolName": "Bash",
+      "annotation": "继续探索代码引用关系"
+    },
+    {
+      "type": "tool_result",
+      "content": "[匹配结果...]",
+      "toolName": "Bash",
+      "annotation": "更多上下文积累"
+    },
+    {
+      "type": "tool_call",
+      "content": "读取 src/routes/api.ts, src/middleware/cors.ts, tests/auth.test.ts",
+      "toolName": "Read",
+      "annotation": "持续读取更多文件"
+    },
+    {
+      "type": "tool_result",
+      "content": "[更多文件内容...]",
+      "toolName": "Read",
+      "annotation": "上下文持续增长"
+    },
+    {
+      "type": "system_event",
+      "content": "当前上下文: 72,000 tokens (接近 80,000 阈值)",
+      "annotation": "经过多轮工具调用，上下文接近阈值"
+    },
+    {
+      "type": "system_event",
+      "content": "Auto 压缩触发:\n1. 调用 LLM 生成对话摘要\n2. 保留最近 3 轮对话\n3. 历史消息替换为摘要\n4. 压缩后: 72,000 → 18,000 tokens",
+      "annotation": "第二层 Auto 压缩：调用 LLM 生成摘要，保留近期对话细节，远期历史压缩为摘要。第三层 Manual 压缩由用户通过 /compact 命令手动触发，机制与 Auto 相同"
+    },
+    {
+      "type": "assistant_text",
+      "content": "[继续工作，上下文已自动压缩]",
+      "annotation": "压缩对用户透明，Agent 继续工作不中断。三层压缩: Micro(零开销截断) → Auto(AI 摘要, 自动触发) → Manual(/compact 命令, 手动触发)"
     }
   ]
 }

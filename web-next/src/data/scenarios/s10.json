@@ -1,38 +1,78 @@
 {
   "version": "s10",
-  "title": "Team Protocols",
-  "description": "Request-response protocols for shutdown and plan approval",
+  "title": "Plan 模式切换",
+  "description": "Plan 模式通过切换工具权限实现只读探索，退出后恢复写操作，且不破坏 prompt cache",
   "steps": [
     {
       "type": "user_message",
-      "content": "Work is done. Shut down the team gracefully.",
-      "annotation": "Can't just kill threads -- need coordinated shutdown"
-    },
-    {
-      "type": "tool_call",
-      "content": "shutdown_request(\n  teammate: \"backend-dev\",\n  request_id: \"req_abc123\"\n)",
-      "toolName": "shutdown_teammate",
-      "annotation": "request_id correlates the request with the response"
-    },
-    {
-      "type": "system_event",
-      "content": "[Shutdown FSM] req_abc123: pending\n  Lead -> backend-dev inbox:\n  { type: \"shutdown_request\", request_id: \"req_abc123\" }",
-      "annotation": "FSM tracks state: pending -> approved | rejected"
-    },
-    {
-      "type": "system_event",
-      "content": "[backend-dev] Received shutdown request req_abc123\n  Current task: none (idle)\n  Decision: approve\n  -> lead inbox: { type: \"shutdown_response\", request_id: \"req_abc123\", approve: true }",
-      "annotation": "Teammate decides whether to approve based on its own state"
-    },
-    {
-      "type": "system_event",
-      "content": "[Shutdown FSM] req_abc123: approved\n  backend-dev thread stopped\n  Status: idle -> shutdown",
-      "annotation": "Same request_id pattern works for plan approval too"
+      "content": "帮我实现用户认证系统",
+      "annotation": "复杂任务适合先用 Plan 模式设计方案"
     },
     {
       "type": "assistant_text",
-      "content": "backend-dev shut down gracefully. The same request_id + FSM pattern handles plan approval: teammate submits plan, lead approves/rejects with the correlated request_id.",
-      "annotation": "One pattern (request_id correlation), two applications (shutdown + plan approval)"
+      "content": "这是一个复杂的任务，让我先进入 Plan 模式来设计方案。",
+      "annotation": "Agent 判断任务复杂度后建议先规划"
+    },
+    {
+      "type": "system_event",
+      "content": "进入 Plan 模式:\n- 权限切换: 禁用 Edit/Write/Bash 写操作\n- 保留: Read/Glob/Grep (只读探索)\n- 系统提示词不变 → prompt cache 保持稳定",
+      "annotation": "Plan 模式的关键设计：切换的是权限而非工具集。系统提示词不变，因此 prompt cache 不会失效，节省 token 和延迟"
+    },
+    {
+      "type": "tool_call",
+      "content": "src/auth/**/*.ts",
+      "toolName": "Glob",
+      "annotation": "只读工具正常可用，用于探索项目结构"
+    },
+    {
+      "type": "tool_result",
+      "content": "src/auth/login.ts\nsrc/auth/session.ts\nsrc/auth/middleware.ts",
+      "toolName": "Glob",
+      "annotation": "发现现有的认证模块文件"
+    },
+    {
+      "type": "tool_call",
+      "content": "src/auth/login.ts",
+      "toolName": "Read",
+      "annotation": "读取现有实现以了解架构"
+    },
+    {
+      "type": "tool_result",
+      "content": "// current auth implementation\nexport function login(username: string, password: string) {\n  // basic password check, no JWT\n  ...\n}",
+      "toolName": "Read",
+      "annotation": "当前实现缺少 JWT 和 refresh token"
+    },
+    {
+      "type": "assistant_text",
+      "content": "方案设计完成：\n1. 添加 JWT token 验证\n2. 实现 refresh token 机制\n3. 添加 middleware 拦截\n\n准备好实施了吗？",
+      "annotation": "Plan 模式下 Agent 只探索和分析，不做任何修改"
+    },
+    {
+      "type": "user_message",
+      "content": "开始吧",
+      "annotation": "用户确认方案，准备进入实施阶段"
+    },
+    {
+      "type": "system_event",
+      "content": "退出 Plan 模式:\n- 恢复所有工具权限\n- Edit/Write/Bash 重新可用\n- 对话历史完整保留",
+      "annotation": "退出 Plan 模式后，之前探索的所有上下文都保留在对话历史中，Agent 可以直接开始实施"
+    },
+    {
+      "type": "tool_call",
+      "content": "修改 src/auth/login.ts: 添加 JWT token 生成和验证逻辑",
+      "toolName": "Edit",
+      "annotation": "写操作权限恢复，开始实施方案"
+    },
+    {
+      "type": "tool_result",
+      "content": "✓ File edited",
+      "toolName": "Edit",
+      "annotation": "文件修改成功"
+    },
+    {
+      "type": "assistant_text",
+      "content": "JWT 验证已添加到 login.ts。",
+      "annotation": "Plan 模式切换权限而非工具集，prompt cache 不失效，是一个低开销的模式切换设计"
     }
   ]
 }

@@ -1,51 +1,59 @@
 {
   "version": "s12",
-  "title": "Worktree + Task Isolation",
-  "description": "Use a shared task board with optional worktree lanes for clean parallel execution",
+  "title": "子 Agent 委派",
+  "description": "父 Agent 创建子 Agent 并行处理任务，子 Agent 拥有干净上下文，只返回摘要结果",
   "steps": [
     {
       "type": "user_message",
-      "content": "Implement auth refactor and login UI updates in parallel",
-      "annotation": "Two active tasks in one workspace would collide"
-    },
-    {
-      "type": "tool_call",
-      "content": "task_create(subject: \"Auth refactor\")\ntask_create(subject: \"Login UI polish\")",
-      "toolName": "task_manager",
-      "annotation": "Shared board remains the coordination source of truth"
-    },
-    {
-      "type": "tool_call",
-      "content": "worktree_create(name: \"auth-refactor\", task_id: 1)\nworktree_create(name: \"ui-login\")\ntask_bind_worktree(task_id: 2, worktree: \"ui-login\")",
-      "toolName": "worktree_manager",
-      "annotation": "Lane allocation and task association are composable; task 2 binds after lane creation"
-    },
-    {
-      "type": "system_event",
-      "content": "worktree.create.before/after emitted\n.tasks/task_1.json -> { status: \"in_progress\", worktree: \"auth-refactor\" }\n.tasks/task_2.json -> { status: \"in_progress\", worktree: \"ui-login\" }\n.worktrees/index.json updated",
-      "annotation": "Control-plane state remains canonical; hook-style consumers can react to lifecycle events without owning canonical state writes"
-    },
-    {
-      "type": "tool_call",
-      "content": "worktree_run(name: \"auth-refactor\", command: \"pytest tests/auth -q\")\nworktree_run(name: \"ui-login\", command: \"npm test -- login\")",
-      "toolName": "worktree_run",
-      "annotation": "In this teaching runtime, commands route by lane-scoped cwd; other runtimes may use session-level directory switches. The invariant is explicit execution context."
-    },
-    {
-      "type": "tool_call",
-      "content": "worktree_keep(name: \"ui-login\")\nworktree_remove(name: \"auth-refactor\", complete_task: true)\nworktree_events(limit: 10)",
-      "toolName": "worktree_manager",
-      "annotation": "Closeout is explicit tool-driven state transition: mix keep/remove decisions and query lifecycle events in one pass"
-    },
-    {
-      "type": "system_event",
-      "content": "worktree.keep emitted for ui-login\nworktree.remove.before/after emitted for auth-refactor\ntask.completed emitted for #1\n.worktrees/events.jsonl appended",
-      "annotation": "Lifecycle transitions become explicit records while task/worktree files remain source-of-truth"
+      "content": "重构 auth 模块并同时更新所有相关测试",
+      "annotation": "任务可拆分为两个独立子任务，适合并行处理"
     },
     {
       "type": "assistant_text",
-      "content": "Task board handles coordination, worktrees handle isolation. Parallel tracks stay clean and auditable.",
-      "annotation": "Coordinate in one board, isolate by lane only where needed, and run optional policy/audit side effects from lifecycle events"
+      "content": "这个任务可以并行处理。我来派一个子 Agent 负责测试更新。",
+      "annotation": "父 Agent 识别出可并行的子任务"
+    },
+    {
+      "type": "system_event",
+      "content": "父 Agent 创建子 Agent:\n- 类型: general-purpose\n- 继承: 工具权限、CLAUDE.md 规则\n- 不继承: 父 Agent 的消息历史\n- 上下文: 全新的干净对话",
+      "annotation": "子 Agent 隔离消息历史是核心设计：避免父 Agent 的大量上下文污染子 Agent，让子 Agent 专注于单一任务"
+    },
+    {
+      "type": "system_event",
+      "content": "子 Agent 收到的 prompt:\n\"你是一个测试工程师。请更新 src/auth/ 下所有模块的测试文件，确保覆盖 JWT 验证和 token refresh 逻辑。\"",
+      "annotation": "父 Agent 通过精简的 prompt 描述任务，而非传递完整对话历史"
+    },
+    {
+      "type": "assistant_text",
+      "content": "[父 Agent] 子 Agent 已启动，我继续重构 auth 模块...",
+      "annotation": "父 Agent 不阻塞等待，继续处理自己的任务"
+    },
+    {
+      "type": "tool_call",
+      "content": "重构 src/auth/login.ts: 添加 JWT 验证、token refresh 逻辑",
+      "toolName": "Edit",
+      "annotation": "父 Agent 并行工作在主代码重构上"
+    },
+    {
+      "type": "tool_result",
+      "content": "✓ File edited",
+      "toolName": "Edit",
+      "annotation": "父 Agent 完成自己的修改"
+    },
+    {
+      "type": "system_event",
+      "content": "子 Agent 工作中:\n- 读取 tests/auth/*.test.ts\n- 添加 JWT 测试用例\n- 运行测试: 12/12 通过",
+      "annotation": "子 Agent 在自己的干净上下文中独立完成工作"
+    },
+    {
+      "type": "system_event",
+      "content": "子 Agent 完成，返回摘要:\n\"已更新 3 个测试文件，新增 8 个测试用例，全部通过。\"",
+      "annotation": "子 Agent 只返回摘要结果给父 Agent，不返回完整的对话历史，避免上下文膨胀"
+    },
+    {
+      "type": "assistant_text",
+      "content": "重构完成。子 Agent 也更新了测试：3 个文件、8 个新用例、全部通过。",
+      "annotation": "子 Agent 隔离消息历史 + 只返回摘要，是避免上下文污染的关键设计。父 Agent 获得结果而不承担子 Agent 的上下文开销"
     }
   ]
 }
