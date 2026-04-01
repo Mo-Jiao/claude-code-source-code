@@ -29,11 +29,11 @@ jobs:
           cache-dependency-path: tutorial/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
         working-directory: tutorial
 
       - name: Build with VitePress
-        run: npx vitepress build
+        run: npm run build
         working-directory: tutorial
 
       - uses: actions/configure-pages@v4
