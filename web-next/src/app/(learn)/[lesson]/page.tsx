@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { LESSON_ORDER, LESSON_META, LAYERS } from "@/lib/constants";
 import { LayerBadge } from "@/components/ui/badge";
+import { LessonDetailClient } from "./client";
+import docsData from "@/data/generated/docs.json";
 
 export function generateStaticParams() {
   return LESSON_ORDER.map((lesson) => ({ lesson }));
@@ -18,13 +20,15 @@ export default async function LessonPage({
   if (!meta) {
     return (
       <div className="py-20 text-center">
-        <h1 className="text-2xl font-bold">Lesson not found</h1>
+        <h1 className="text-2xl font-bold">课程未找到</h1>
         <p className="mt-2 text-zinc-500">{lesson}</p>
       </div>
     );
   }
 
   const layer = LAYERS.find((l) => l.id === meta.layer);
+
+  const doc = (docsData as any).docs.find((d: any) => d.id === lesson);
 
   const pathIndex = LESSON_ORDER.indexOf(lesson as typeof LESSON_ORDER[number]);
   const prevLesson = pathIndex > 0 ? LESSON_ORDER[pathIndex - 1] : null;
@@ -50,7 +54,7 @@ export default async function LessonPage({
           {meta.subtitle}
         </p>
         <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
-          <span>{meta.readingTime}</span>
+          <span>预计阅读 {meta.readingTime}</span>
         </div>
         {meta.keyInsight && (
           <blockquote className="border-l-4 border-zinc-300 pl-4 text-sm italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">
@@ -59,7 +63,15 @@ export default async function LessonPage({
         )}
       </header>
 
-      {/* TODO: Lesson content will be rendered here in Task 4 */}
+      {/* Lesson content */}
+      {doc && (
+        <LessonDetailClient
+          lesson={lesson}
+          learn={doc.learn}
+          source={doc.source}
+          deepDive={doc.deepDive}
+        />
+      )}
 
       {/* Prev / Next navigation */}
       <nav className="flex items-center justify-between border-t border-zinc-200 pt-6 dark:border-zinc-700">
@@ -72,7 +84,7 @@ export default async function LessonPage({
               &larr;
             </span>
             <div>
-              <div className="text-xs text-zinc-400">Previous</div>
+              <div className="text-xs text-zinc-400">上一课</div>
               <div className="font-medium">
                 {prevLesson} - {LESSON_META[prevLesson]?.title}
               </div>
@@ -87,7 +99,7 @@ export default async function LessonPage({
             className="group flex items-center gap-2 text-right text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-white"
           >
             <div>
-              <div className="text-xs text-zinc-400">Next</div>
+              <div className="text-xs text-zinc-400">下一课</div>
               <div className="font-medium">
                 {LESSON_META[nextLesson]?.title} - {nextLesson}
               </div>

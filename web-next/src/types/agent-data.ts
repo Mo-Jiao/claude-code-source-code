@@ -1,5 +1,5 @@
 export interface SimulatorStep {
-  type: "user_message" | "assistant_text" | "tool_call" | "tool_result";
+  type: "user_message" | "assistant_text" | "tool_call" | "tool_result" | "system_event";
   content: string;
   toolName?: string;
   annotation: string;

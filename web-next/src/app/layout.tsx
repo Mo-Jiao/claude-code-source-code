@@ -3,8 +3,8 @@ import { Header } from "@/components/layout/header";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Claude Code Source Code Tutorial",
-  description: "Deep dive into Claude Code's source code, one lesson at a time",
+  title: "Claude Code 源码教程",
+  description: "从 Harness Engineering 视角拆解 Claude Code 51 万行源码",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: `
           (function() {

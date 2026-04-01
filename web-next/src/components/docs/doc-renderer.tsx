@@ -1,8 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { useLocale } from "@/lib/i18n";
-import docsData from "@/data/generated/docs.json";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
@@ -12,7 +10,7 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeStringify from "rehype-stringify";
 
 interface DocRendererProps {
-  version: string;
+  content: string;
 }
 
 function renderMarkdown(md: string): string {
@@ -33,52 +31,20 @@ function postProcessHtml(html: string): string {
     /<pre><code class="hljs language-(\w+)">/g,
     '<pre class="code-block" data-language="$1"><code class="hljs language-$1">'
   );
-
-  // Wrap plain pre>code (ASCII art / diagrams) in diagram container
+  // Wrap plain pre>code in diagram container
   html = html.replace(
     /<pre><code(?! class="hljs)([^>]*)>/g,
     '<pre class="ascii-diagram"><code$1>'
   );
-
-  // Mark the first blockquote as hero callout
-  html = html.replace(
-    /<blockquote>/,
-    '<blockquote class="hero-callout">'
-  );
-
-  // Remove the h1 (it's redundant with the page header)
-  html = html.replace(/<h1>.*?<\/h1>\n?/, "");
-
-  // Fix ordered list counter for interrupted lists (ol start="N")
-  html = html.replace(
-    /<ol start="(\d+)">/g,
-    (_, start) => `<ol style="counter-reset:step-counter ${parseInt(start) - 1}">`
-  );
-
   return html;
 }
 
-export function DocRenderer({ version }: DocRendererProps) {
-  const locale = useLocale();
-
-  const doc = useMemo(() => {
-    const match = docsData.find(
-      (d: { version: string; locale: string }) =>
-        d.version === version && d.locale === locale
-    );
-    if (match) return match;
-    return docsData.find(
-      (d: { version: string; locale: string }) =>
-        d.version === version && d.locale === "en"
-    );
-  }, [version, locale]);
-
-  if (!doc) return null;
-
+export function DocRenderer({ content }: DocRendererProps) {
   const html = useMemo(() => {
-    const raw = renderMarkdown(doc.content);
+    if (!content) return "<p class='text-zinc-500'>暂无内容</p>";
+    const raw = renderMarkdown(content);
     return postProcessHtml(raw);
-  }, [doc.content]);
+  }, [content]);
 
   return (
     <div className="py-4">

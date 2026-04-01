@@ -1,69 +1,36 @@
 "use client";
 
-import { ArchDiagram } from "@/components/architecture/arch-diagram";
-import { DesignDecisions } from "@/components/architecture/design-decisions";
 import { DocRenderer } from "@/components/docs/doc-renderer";
-import { AgentLoopSimulator } from "@/components/simulator/agent-loop-simulator";
-import { ExecutionFlow } from "@/components/architecture/execution-flow";
-import { SessionVisualization } from "@/components/visualizations";
 import { Tabs } from "@/components/ui/tabs";
 
-interface VersionDetailClientProps {
-  version: string;
-  diff: {
-    from: string;
-    to: string;
-    newClasses: string[];
-    newFunctions: string[];
-    newTools: string[];
-    locDelta: number;
-  } | null;
+interface LessonDetailClientProps {
+  lesson: string;
+  learn: string;
   source: string;
-  filename: string;
+  deepDive: string;
 }
 
-export function VersionDetailClient({
-  version,
-  diff,
-  source,
-  filename,
-}: VersionDetailClientProps) {
-  const tabs = [
-    { id: "learn", label: "Learn" },
-    { id: "simulate", label: "Simulate" },
-    { id: "deep-dive", label: "Deep Dive" },
-  ];
+const TABS = [
+  { id: "learn", label: "学习" },
+  { id: "simulate", label: "模拟" },
+  { id: "source", label: "源码" },
+  { id: "deep-dive", label: "深入" },
+];
 
+export function LessonDetailClient({ lesson, learn, source, deepDive }: LessonDetailClientProps) {
   return (
     <div className="space-y-6">
-      {/* Hero Visualization */}
-      <SessionVisualization version={version} />
-
-      {/* Tabbed content */}
-      <Tabs tabs={tabs} defaultTab="learn">
+      <Tabs tabs={TABS} defaultTab="learn">
         {(activeTab) => (
           <>
-            {activeTab === "learn" && <DocRenderer version={version} />}
+            {activeTab === "learn" && <DocRenderer content={learn} />}
             {activeTab === "simulate" && (
-              <AgentLoopSimulator version={version} />
-            )}
-            {activeTab === "deep-dive" && (
-              <div className="space-y-8">
-                <section>
-                  <h2 className="mb-4 text-xl font-semibold">
-                    Execution Flow
-                  </h2>
-                  <ExecutionFlow version={version} />
-                </section>
-                <section>
-                  <h2 className="mb-4 text-xl font-semibold">
-                    Architecture
-                  </h2>
-                  <ArchDiagram version={version} />
-                </section>
-                <DesignDecisions version={version} />
+              <div className="rounded-lg border border-zinc-200 p-8 text-center text-zinc-500 dark:border-zinc-700">
+                模拟器开发中...
               </div>
             )}
+            {activeTab === "source" && <DocRenderer content={source} />}
+            {activeTab === "deep-dive" && <DocRenderer content={deepDive} />}
           </>
         )}
       </Tabs>
