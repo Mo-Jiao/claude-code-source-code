@@ -38,18 +38,10 @@ const IMAGE_PATH_MAP: Record<string, string> = {
 };
 
 function fixImagePaths(content: string): string {
-  // Rewrite known image paths to match actual filenames
+  // Only rewrite known image paths to match actual filenames; keep all other references as-is
   for (const [from, to] of Object.entries(IMAGE_PATH_MAP)) {
     content = content.replace(from, to);
   }
-  // Remove image references that have no corresponding file
-  content = content.replace(/!\[[^\]]*\]\(\/diagrams\/[^)]+\)\n?/g, (match) => {
-    const src = match.match(/\(([^)]+)\)/)?.[1] || "";
-    if (Object.values(IMAGE_PATH_MAP).some(p => src === p)) {
-      return match; // keep — file exists
-    }
-    return ""; // remove — no file
-  });
   return content;
 }
 
