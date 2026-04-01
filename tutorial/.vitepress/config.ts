@@ -6,6 +6,7 @@ export default withMermaid(
     title: 'Claude Code 源码解读',
     description: '从源码理解第一梯队 AI Agent 的工程架构',
     lang: 'zh-CN',
+    base: '/claude-code-source-code/',
     lastUpdated: true,
     ignoreDeadLinks: true,
 
@@ -20,6 +21,12 @@ export default withMermaid(
           {
             text: '学习路径',
             link: '/guide/',
+          },
+          {
+            text: '导论',
+            items: [
+              { text: 's00 — Harness Engineering', link: '/guide/s00-harness-engineering' },
+            ],
           },
           {
             text: '第一层：核心引擎',
