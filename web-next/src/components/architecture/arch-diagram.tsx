@@ -23,7 +23,7 @@ interface ArchDiagramProps {
 }
 
 function getLayerColor(versionId: string): string {
-  const layer = LAYERS.find((l) => (l.versions as readonly string[]).includes(versionId));
+  const layer = LAYERS.find((l) => l.lessons.includes(versionId));
   return layer?.color ?? "#71717a";
 }
 
@@ -35,30 +35,40 @@ function getLayerColorClasses(versionId: string): {
     versionsData.versions.find((v) => v.id === versionId) as { layer?: string } | undefined;
   const layer = v?.layer;
   switch (layer) {
-    case "tools":
+    case "intro":
+      return {
+        border: "border-gray-500",
+        bg: "bg-gray-500/10",
+      };
+    case "core":
       return {
         border: "border-blue-500",
         bg: "bg-blue-500/10",
       };
-    case "planning":
+    case "safety":
       return {
         border: "border-emerald-500",
         bg: "bg-emerald-500/10",
       };
-    case "memory":
+    case "context":
       return {
         border: "border-purple-500",
         bg: "bg-purple-500/10",
       };
-    case "concurrency":
+    case "planning":
       return {
         border: "border-amber-500",
         bg: "bg-amber-500/10",
       };
-    case "collaboration":
+    case "agents":
       return {
         border: "border-red-500",
         bg: "bg-red-500/10",
+      };
+    case "ecosystem":
+      return {
+        border: "border-teal-500",
+        bg: "bg-teal-500/10",
       };
     default:
       return {

@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { LEARNING_PATH, VERSION_META, LAYERS } from "@/lib/constants";
+import { LESSON_ORDER, LESSON_META, LAYERS } from "@/lib/constants";
 import { LayerBadge } from "@/components/ui/badge";
-import versionsData from "@/data/generated/versions.json";
-import { VersionDetailClient } from "./client";
 
 export function generateStaticParams() {
-  return LEARNING_PATH.map((lesson) => ({ lesson }));
+  return LESSON_ORDER.map((lesson) => ({ lesson }));
 }
 
 export default async function LessonPage({
@@ -15,11 +13,9 @@ export default async function LessonPage({
 }) {
   const { lesson } = await params;
 
-  const versionData = versionsData.versions.find((v) => v.id === lesson);
-  const meta = VERSION_META[lesson];
-  const diff = versionsData.diffs.find((d) => d.to === lesson) ?? null;
+  const meta = LESSON_META[lesson];
 
-  if (!versionData || !meta) {
+  if (!meta) {
     return (
       <div className="py-20 text-center">
         <h1 className="text-2xl font-bold">Lesson not found</h1>
@@ -30,11 +26,11 @@ export default async function LessonPage({
 
   const layer = LAYERS.find((l) => l.id === meta.layer);
 
-  const pathIndex = LEARNING_PATH.indexOf(lesson as typeof LEARNING_PATH[number]);
-  const prevVersion = pathIndex > 0 ? LEARNING_PATH[pathIndex - 1] : null;
-  const nextVersion =
-    pathIndex < LEARNING_PATH.length - 1
-      ? LEARNING_PATH[pathIndex + 1]
+  const pathIndex = LESSON_ORDER.indexOf(lesson as typeof LESSON_ORDER[number]);
+  const prevLesson = pathIndex > 0 ? LESSON_ORDER[pathIndex - 1] : null;
+  const nextLesson =
+    pathIndex < LESSON_ORDER.length - 1
+      ? LESSON_ORDER[pathIndex + 1]
       : null;
 
   return (
@@ -54,13 +50,7 @@ export default async function LessonPage({
           {meta.subtitle}
         </p>
         <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
-          <span className="font-mono">{versionData.loc} LOC</span>
-          <span>{versionData.tools.length} tools</span>
-          {meta.coreAddition && (
-            <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs dark:bg-zinc-800">
-              {meta.coreAddition}
-            </span>
-          )}
+          <span>{meta.readingTime}</span>
         </div>
         {meta.keyInsight && (
           <blockquote className="border-l-4 border-zinc-300 pl-4 text-sm italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">
@@ -69,19 +59,13 @@ export default async function LessonPage({
         )}
       </header>
 
-      {/* Client-rendered interactive sections */}
-      <VersionDetailClient
-        version={lesson}
-        diff={diff}
-        source={versionData.source}
-        filename={versionData.filename}
-      />
+      {/* TODO: Lesson content will be rendered here in Task 4 */}
 
       {/* Prev / Next navigation */}
       <nav className="flex items-center justify-between border-t border-zinc-200 pt-6 dark:border-zinc-700">
-        {prevVersion ? (
+        {prevLesson ? (
           <Link
-            href={`/${prevVersion}`}
+            href={`/${prevLesson}`}
             className="group flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-white"
           >
             <span className="transition-transform group-hover:-translate-x-1">
@@ -90,22 +74,22 @@ export default async function LessonPage({
             <div>
               <div className="text-xs text-zinc-400">Previous</div>
               <div className="font-medium">
-                {prevVersion} - {VERSION_META[prevVersion]?.title}
+                {prevLesson} - {LESSON_META[prevLesson]?.title}
               </div>
             </div>
           </Link>
         ) : (
           <div />
         )}
-        {nextVersion ? (
+        {nextLesson ? (
           <Link
-            href={`/${nextVersion}`}
+            href={`/${nextLesson}`}
             className="group flex items-center gap-2 text-right text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-white"
           >
             <div>
               <div className="text-xs text-zinc-400">Next</div>
               <div className="font-medium">
-                {VERSION_META[nextVersion]?.title} - {nextVersion}
+                {LESSON_META[nextLesson]?.title} - {nextLesson}
               </div>
             </div>
             <span className="transition-transform group-hover:translate-x-1">

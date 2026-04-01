@@ -2,11 +2,11 @@
 
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import type { SimStep } from "@/types/agent-data";
+import type { SimulatorStep } from "@/types/agent-data";
 import { User, Bot, Terminal, ArrowRight, AlertCircle } from "lucide-react";
 
 interface SimulatorMessageProps {
-  step: SimStep;
+  step: SimulatorStep;
   index: number;
 }
 

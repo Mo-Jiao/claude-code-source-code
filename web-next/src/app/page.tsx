@@ -1,40 +1,41 @@
 "use client";
 
 import Link from "next/link";
-import { LEARNING_PATH, VERSION_META, LAYERS } from "@/lib/constants";
+import { LESSON_ORDER, LESSON_META, LAYERS } from "@/lib/constants";
 import { LayerBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import versionsData from "@/data/generated/versions.json";
 import { MessageFlow } from "@/components/architecture/message-flow";
 
 const LAYER_DOT_COLORS: Record<string, string> = {
-  tools: "bg-blue-500",
-  planning: "bg-emerald-500",
-  memory: "bg-purple-500",
-  concurrency: "bg-amber-500",
-  collaboration: "bg-red-500",
+  intro: "bg-gray-500",
+  core: "bg-blue-500",
+  safety: "bg-emerald-500",
+  context: "bg-purple-500",
+  planning: "bg-amber-500",
+  agents: "bg-red-500",
+  ecosystem: "bg-teal-500",
 };
 
 const LAYER_BORDER_COLORS: Record<string, string> = {
-  tools: "border-blue-500/30 hover:border-blue-500/60",
-  planning: "border-emerald-500/30 hover:border-emerald-500/60",
-  memory: "border-purple-500/30 hover:border-purple-500/60",
-  concurrency: "border-amber-500/30 hover:border-amber-500/60",
-  collaboration: "border-red-500/30 hover:border-red-500/60",
+  intro: "border-gray-500/30 hover:border-gray-500/60",
+  core: "border-blue-500/30 hover:border-blue-500/60",
+  safety: "border-emerald-500/30 hover:border-emerald-500/60",
+  context: "border-purple-500/30 hover:border-purple-500/60",
+  planning: "border-amber-500/30 hover:border-amber-500/60",
+  agents: "border-red-500/30 hover:border-red-500/60",
+  ecosystem: "border-teal-500/30 hover:border-teal-500/60",
 };
 
 const LAYER_BAR_COLORS: Record<string, string> = {
-  tools: "bg-blue-500",
-  planning: "bg-emerald-500",
-  memory: "bg-purple-500",
-  concurrency: "bg-amber-500",
-  collaboration: "bg-red-500",
+  intro: "bg-gray-500",
+  core: "bg-blue-500",
+  safety: "bg-emerald-500",
+  context: "bg-purple-500",
+  planning: "bg-amber-500",
+  agents: "bg-red-500",
+  ecosystem: "bg-teal-500",
 };
-
-function getVersionData(id: string) {
-  return versionsData.versions.find((v) => v.id === id);
-}
 
 export default function HomePage() {
   return (
@@ -49,7 +50,7 @@ export default function HomePage() {
         </p>
         <div className="mt-8">
           <Link
-            href={`/${LEARNING_PATH[0]}`}
+            href={`/${LESSON_ORDER[0]}`}
             className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-zinc-900 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             Start Learning
@@ -143,14 +144,13 @@ export default function HomePage() {
           </p>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {LEARNING_PATH.map((versionId) => {
-            const meta = VERSION_META[versionId];
-            const data = getVersionData(versionId);
-            if (!meta || !data) return null;
+          {LESSON_ORDER.map((lessonId) => {
+            const meta = LESSON_META[lessonId];
+            if (!meta) return null;
             return (
               <Link
-                key={versionId}
-                href={`/${versionId}`}
+                key={lessonId}
+                href={`/${lessonId}`}
                 className="group block"
               >
                 <Card
@@ -160,9 +160,9 @@ export default function HomePage() {
                   )}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <LayerBadge layer={meta.layer}>{versionId}</LayerBadge>
+                    <LayerBadge layer={meta.layer}>{lessonId}</LayerBadge>
                     <span className="text-xs tabular-nums text-[var(--color-text-secondary)]">
-                      {data.loc} LOC
+                      {meta.readingTime}
                     </span>
                   </div>
                   <h3 className="mt-3 text-sm font-semibold group-hover:underline">
@@ -183,7 +183,7 @@ export default function HomePage() {
         <div className="mb-6 text-center">
           <h2 className="text-2xl font-bold sm:text-3xl">Architectural Layers</h2>
           <p className="mt-2 text-[var(--color-text-secondary)]">
-            Five orthogonal concerns that compose into a complete agent
+            Seven layers from core loop to ecosystem
           </p>
         </div>
         <div className="flex flex-col gap-3">
@@ -202,12 +202,12 @@ export default function HomePage() {
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-semibold">{layer.label}</h3>
                   <span className="text-xs text-[var(--color-text-secondary)]">
-                    {layer.versions.length} versions
+                    {layer.lessons.length} lessons
                   </span>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {layer.versions.map((vid) => {
-                    const meta = VERSION_META[vid];
+                  {layer.lessons.map((vid) => {
+                    const meta = LESSON_META[vid];
                     return (
                       <Link key={vid} href={`/${vid}`}>
                         <LayerBadge

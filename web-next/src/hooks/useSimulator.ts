@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import type { SimStep } from "@/types/agent-data";
+import type { SimulatorStep } from "@/types/agent-data";
 
 interface SimulatorState {
   currentIndex: number;
@@ -9,7 +9,7 @@ interface SimulatorState {
   speed: number;
 }
 
-export function useSimulator(steps: SimStep[]) {
+export function useSimulator(steps: SimulatorStep[]) {
   const [state, setState] = useState<SimulatorState>({
     currentIndex: -1,
     isPlaying: false,

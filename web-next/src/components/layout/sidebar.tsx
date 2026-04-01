@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LAYERS, VERSION_META } from "@/lib/constants";
+import { LAYERS, LESSON_META } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 const LAYER_DOT_BG: Record<string, string> = {
-  tools: "bg-blue-500",
-  planning: "bg-emerald-500",
-  memory: "bg-purple-500",
-  concurrency: "bg-amber-500",
-  collaboration: "bg-red-500",
+  intro: "bg-gray-500",
+  core: "bg-blue-500",
+  safety: "bg-emerald-500",
+  context: "bg-purple-500",
+  planning: "bg-amber-500",
+  agents: "bg-red-500",
+  ecosystem: "bg-teal-500",
 };
 
 export function Sidebar() {
@@ -28,8 +30,8 @@ export function Sidebar() {
               </span>
             </div>
             <ul className="space-y-0.5">
-              {layer.versions.map((vId) => {
-                const meta = VERSION_META[vId];
+              {layer.lessons.map((vId) => {
+                const meta = LESSON_META[vId];
                 const href = `/${vId}`;
                 const isActive =
                   pathname === href ||
