@@ -648,6 +648,6 @@ cat <session-file>.jsonl | jq -r '.type' | sort | uniq -c | sort -rn
 
 <!--@include: ./_fragments/sim-s01.md-->
 
-## 设计决策
+## 架构决策卡片
 
 <!--@include: ./_fragments/ann-s01.md-->

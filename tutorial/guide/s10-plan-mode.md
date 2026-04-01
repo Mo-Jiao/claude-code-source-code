@@ -689,6 +689,6 @@ Plan Mode 也是"约束悖论"的体现 [R1-7]：通过限制 Agent 只能思考
 
 <!--@include: ./_fragments/viz-s10.md-->
 
-## 设计决策
+## 架构决策卡片
 
 <!--@include: ./_fragments/ann-s10.md-->

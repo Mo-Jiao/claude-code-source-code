@@ -980,6 +980,6 @@ wc -c system_prompt.txt  # 查看字节数
 
 <!--@include: ./_fragments/sim-s03.md-->
 
-## 设计决策
+## 架构决策卡片
 
 <!--@include: ./_fragments/ann-s03.md-->

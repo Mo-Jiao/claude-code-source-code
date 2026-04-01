@@ -990,6 +990,6 @@ fi
 
 <!--@include: ./_fragments/sim-s05.md-->
 
-## 设计决策
+## 架构决策卡片
 
 <!--@include: ./_fragments/ann-s05.md-->

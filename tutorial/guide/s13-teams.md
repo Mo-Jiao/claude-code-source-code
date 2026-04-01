@@ -985,6 +985,6 @@ AgileSoftLabs（AI 服务供应商）的博客报告称，部署多 Agent 架构
 
 <!--@include: ./_fragments/sim-s13.md-->
 
-## 设计决策
+## 架构决策卡片
 
 <!--@include: ./_fragments/ann-s13.md-->

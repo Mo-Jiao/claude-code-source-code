@@ -8,6 +8,7 @@ export default withMermaid(
         chunkSizeWarningLimit: 600,
       },
     },
+    srcExclude: ['**/guide/_fragments/**'],
     title: 'Claude Code 源码解读',
     description: '从源码理解第一梯队 AI Agent 的工程架构',
     lang: 'zh-CN',

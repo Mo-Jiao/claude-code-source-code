@@ -1069,6 +1069,6 @@ Arcade.dev 指出：Skills、toolkits、functions、MCP servers 对模型而言*
 
 <!--@include: ./_fragments/sim-s09.md-->
 
-## 设计决策
+## 架构决策卡片
 
 <!--@include: ./_fragments/ann-s09.md-->

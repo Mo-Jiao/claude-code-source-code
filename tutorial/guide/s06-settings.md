@@ -911,6 +911,6 @@ assert result["model"] == "opus"  # 标量被覆盖
 
 <!--@include: ./_fragments/sim-s06.md-->
 
-## 设计决策
+## 架构决策卡片
 
 <!--@include: ./_fragments/ann-s06.md-->

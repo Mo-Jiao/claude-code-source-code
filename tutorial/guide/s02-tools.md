@@ -965,6 +965,6 @@ claude -p "Read package.json and tell me the project name" --tools "Read"
 
 <!--@include: ./_fragments/viz-s02.md-->
 
-## 设计决策
+## 架构决策卡片
 
 <!--@include: ./_fragments/ann-s02.md-->

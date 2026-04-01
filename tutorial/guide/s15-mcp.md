@@ -717,6 +717,6 @@ MCP（Model Context Protocol）是 **Tool-as-Context** 模式的标准化实现 
 
 <!--@include: ./_fragments/sim-s15.md-->
 
-## 设计决策
+## 架构决策卡片
 
 <!--@include: ./_fragments/ann-s15.md-->

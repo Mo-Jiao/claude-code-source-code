@@ -693,6 +693,6 @@ Skills 提供领域知识和操作模板，Plan Mode 利用这些知识制定计
 
 <!--@include: ./_fragments/sim-s11.md-->
 
-## 设计决策
+## 架构决策卡片
 
 <!--@include: ./_fragments/ann-s11.md-->

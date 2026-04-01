@@ -676,6 +676,6 @@ Browser Use 的 agent-sdk 哲学："All the value is in the RL'd model, not your
 
 <!--@include: ./_fragments/sim-s16.md-->
 
-## 设计决策
+## 架构决策卡片
 
 <!--@include: ./_fragments/ann-s16.md-->

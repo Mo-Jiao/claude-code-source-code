@@ -688,6 +688,6 @@ Claude Code 按能力将 Agent 分为只读型（Explore）、全能型（genera
 
 <!--@include: ./_fragments/sim-s12.md-->
 
-## 设计决策
+## 架构决策卡片
 
 <!--@include: ./_fragments/ann-s12.md-->
