@@ -18,9 +18,29 @@ const TABS = [
   { id: "deep-dive", label: "深入" },
 ];
 
+const DIAGRAM_MAP: Record<string, string> = {
+  s01: "agent-loop",
+  s02: "tool-pipeline",
+  s03: "prompt-layers",
+  s04: "permission-waterfall",
+  s07: "compression",
+  s12: "subagent",
+};
+
 export function LessonDetailClient({ lesson, learn, source, deepDive }: LessonDetailClientProps) {
+  const diagramName = DIAGRAM_MAP[lesson];
+
   return (
     <div className="space-y-6">
+      {diagramName && (
+        <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+          <img
+            src={`/diagrams/${lesson}-${diagramName}.png`}
+            alt="架构图"
+            className="w-full"
+          />
+        </div>
+      )}
       <Tabs tabs={TABS} defaultTab="learn">
         {(activeTab) => (
           <>
