@@ -23,8 +23,17 @@ const DIAGRAM_MAP: Record<string, string> = {
   s02: "tool-pipeline",
   s03: "prompt-layers",
   s04: "permission-waterfall",
+  s05: "hooks",
+  s06: "settings",
   s07: "compression",
+  s08: "memory",
+  s09: "skills",
+  s10: "plan",
+  s11: "tasks",
   s12: "subagent",
+  s14: "worktree",
+  s15: "mcp",
+  s16: "architecture",
 };
 
 export function LessonDetailClient({ lesson, learn, source, deepDive }: LessonDetailClientProps) {
