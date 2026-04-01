@@ -1,6 +1,8 @@
 # s10 — Plan 模式：先想后做
 
-> "Measure twice, cut once"
+> "Measure twice, cut once" · 预计阅读 15 分钟
+
+**核心洞察：Plan 模式通过状态机限制工具权限——"只读不写"，让 Agent 在动手前先和用户对齐方案。**
 
 ::: info Key Takeaways
 - **状态机设计** — Plan 模式是权限模式切换，不是工具集切换，保护 Prompt Cache 不失效
@@ -217,6 +219,9 @@ isEnabled() {
 ```
 
 ## Python 伪代码
+
+<details>
+<summary>展开查看完整 Python 伪代码（326 行）</summary>
 
 ```python
 """Plan Mode 状态机——用权限模式实现只读规划阶段"""
@@ -546,6 +551,8 @@ if __name__ == "__main__":
     demo_plan_mode()
 ```
 
+</details>
+
 ## 源码映射
 
 | 概念 | 真实源码路径 | 说明 |
@@ -600,6 +607,18 @@ prompt 中也明确说了："If you would use AskUserQuestion to clarify the app
 ### Interview Phase 实验
 
 Claude Code 还在实验一个更结构化的计划流程——"Interview Phase"。启用后，Plan Mode 的 workflow 指令不在工具 prompt 中，而是通过 attachment 注入更详细的多阶段指引。这是一个正在进行的 A/B 测试，目标是找到计划详细程度和实施效率的最佳平衡点。
+
+## Why：设计决策与行业上下文
+
+### Routing 策略：Context Engineering 的第六策略
+
+Plan Mode 是 **Routing**（路由）策略的实现 [R1-11]——根据任务类型选择不同的执行策略，将查询导向正确的处理路径。在 Plan 模式下，Agent 只做分析和规划，不执行修改操作，这本质上是将"规划"和"执行"路由到不同的行为模式。
+
+### 约束提升质量
+
+Plan Mode 也是"约束悖论"的体现 [R1-7]：通过限制 Agent 只能思考不能行动，反而让规划质量更高。这与 LangChain 在 Terminal Bench 2.0 上的发现一致——harness 层的约束是提升 Agent 可靠性的关键 [R1-2]。
+
+> **参考来源：** LangChain [R1-2]、Epsilla [R1-7]。完整引用见 `docs/research/05-harness-trends-deep-20260401.md`。
 
 ## 变化表
 

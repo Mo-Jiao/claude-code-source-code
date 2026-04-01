@@ -1,6 +1,8 @@
 # s08 — Memory 系统：CLAUDE.md 与自动记忆
 
-> "An agent without memory starts every conversation as a stranger"
+> "An agent without memory starts every conversation as a stranger" · 预计阅读 18 分钟
+
+**核心洞察：CLAUDE.md 是 Agent 的"团队 wiki"——项目约定写一次，每次对话自动加载，不需要反复交代。**
 
 ::: info Key Takeaways
 - **双轨记忆** — CLAUDE.md (规则型，用户手写) + Auto Memory (文件型，AI 自动沉淀)
@@ -172,6 +174,9 @@ MEMORY.md 是记忆目录的索引文件。它**始终被注入到上下文中**
 这个设计的关键是索引与内容分离。MEMORY.md 始终在上下文中，但只占用很少的 token。完整内容通过智能检索按需加载。
 
 ## Python 伪代码
+
+<details>
+<summary>展开查看完整 Python 伪代码（669 行）</summary>
 
 ```python
 """
@@ -844,6 +849,8 @@ async def main():
     mem.forget_memory("project_old_deadline.md")
 ```
 
+</details>
+
 ## 源码映射
 
 | 概念 | 真实源码路径 | 说明 |
@@ -909,6 +916,24 @@ Claude Code 的 prompt 中明确区分了三种持久化机制：
 
 如果要开始一个复杂任务，应该用 Plan；如果要跟踪进度，应该用 Task；如果学到了未来对话也有用的信息，才用 Memory。这个区分避免了记忆系统被短期信息淹没。
 
+## Why：设计决策与行业上下文
+
+### 状态外化到文件系统：Anthropic 双体架构的核心洞察
+
+Anthropic 在长运行 Agent 设计中发现：**与其试图让一个 Agent 记住一切，不如将状态外化到文件系统** [R1-5]。他们的双体架构（Initializer Agent + Coding Agent）中，Initializer 在首次运行时将项目结构、功能列表、进度写入文件系统，后续 Coding Agent 通过读取这些文件恢复上下文。
+
+Claude Code 的 Memory 系统正是这一理念的实现：MEMORY.md 索引 + 按需加载的记忆文件，将跨会话知识外化为文件系统上的结构化数据。
+
+### Write 策略：Context Engineering 的第一个策略
+
+LangChain 四策略框架的第一个就是 **Write**——将信息持久化到上下文窗口之外 [R1-3]。Memory 系统是 Write 策略的核心载体：用户偏好、项目知识、行为纠正都写入磁盘，确保跨会话可用而不占用宝贵的上下文空间。
+
+### Durability 问题的对策
+
+Philschmid 指出模型在 50 步之后会出现指令遵循衰减 [R1-1]。Memory 系统是对抗 durability 衰减的关键工具——即使上下文被压缩，关键指令仍能通过 MEMORY.md 被重新加载进入新的上下文窗口。
+
+> **参考来源：** Anthropic [R1-5]、LangChain [R1-3]、Philschmid [R1-1]。完整引用见 `docs/research/05-harness-trends-deep-20260401.md`。
+
 ## 变化表
 
 | 对比 s07 | s08 新增 |
@@ -951,4 +976,3 @@ Claude Code 的 prompt 中明确区分了三种持久化机制：
 ## 推荐阅读
 
 - [Memory poisoning in AI agents (christian-schneider.net)](https://christian-schneider.net/) — Memory Poisoning 攻击面分析
-- [Engineering Memory for AI Agents: A Practical Guide](https://medium.com/) — 短期 vs 长期记忆设计

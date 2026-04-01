@@ -1,6 +1,8 @@
 # s16 — 全景架构：从 CLI 启动到完整交互
 
-> "See the forest, then the trees"
+> "See the forest, then the trees" · 预计阅读 15 分钟
+
+**核心洞察：一次用户查询经过 8 个阶段、跨越 16 个子系统——全景视角让你看到每个模块如何协同工作。**
 
 ::: info Key Takeaways
 - **启动四阶段** — parse CLI → init config → get tools → start REPL/SDK，并发副作用优化启动速度
@@ -552,6 +554,28 @@ Claude Code 的性能优化分布在每一层：
 | 连接层 | MCP 批量连接 + 并发分级 | 不阻塞用户输入 |
 
 这些优化不是独立存在的——它们互相增强。比如，prompt cache 的高命中率依赖于系统提示词的层级设计（s13），而层级设计又受延迟加载（s10）影响——如果所有工具描述都在系统提示词中，每次工具集变化都会打破缓存。
+
+## Why：设计决策与行业上下文
+
+### 苦涩教训的工程实践
+
+Daniel Miessler 将 Rich Sutton 的理论提炼为 Bitter Lesson Engineering (BLE) [R2-25]：
+
+1. **分清 what 和 how**：告诉 AI 你想要什么结果，不要规定它怎么做
+2. **不要用人类发现去污染 AI 的原生能力**："Not only will it not be better if we try to help, but it will likely be far worse."
+3. **每次模型升级时审视你的脚手架代码**：如果新模型能直接做到，就删掉旧代码
+
+Claude Code 团队的"每次新模型发布就删掉一半 prompt"正是这一原则的实践。
+
+### "给工具不给工作流"
+
+Browser Use 的 agent-sdk 哲学："All the value is in the RL'd model, not your 10,000 lines of abstractions." [R2-3] 与其写 10,000 行抽象层来弥补模型不足，不如等模型进步然后删代码。Armin Ronacher（Flask 作者）也认为极简 Agent 是"a glimpse into the future of software" [R2-26]。
+
+### Claude Code 的整体定位
+
+在 2026 年的行业图景中，Claude Code 被反复引用为**现有最佳 harness 的代表案例** [R1-1][R1-13]。Aakash Gupta 的总结精准：强模型有帮助，但没有坚实的 harness，你只是得到了"更快的失败模式"。Claude Code 赢在三个方面：正确的文件系统访问、正确的 harness 控制流、正确的上下文管理策略。
+
+> **参考来源：** Daniel Miessler [R2-25]、Browser Use [R2-3]、Armin Ronacher [R2-26]、Aakash Gupta [R1-13]。完整引用见 `docs/research/` 目录下的调研报告。
 
 ## 动手试试
 

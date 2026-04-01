@@ -40,7 +40,20 @@ Claude Code 的源码有 51 万行、1,884 个文件。其中 Agent 核心循环
 
 > *"AI 编码工具的护城河不是模型，而是 Harness。"* — 社区共识
 
-### 一个类比
+### 两个类比
+
+**计算机类比** (Philschmid, 2026)：
+
+| 计算机 | AI Agent |
+|--------|----------|
+| CPU | LLM 模型（计算引擎） |
+| RAM | 上下文窗口（工作内存） |
+| 操作系统 | Harness（调度一切） |
+| 应用程序 | Agent 本身（用户看到的） |
+
+操作系统管理 CPU 和 RAM，让应用程序不需要直接操心硬件。同理，Harness 管理模型和上下文窗口，让 Agent 不需要直接操心 token 预算和工具调度。
+
+**汽车类比**：
 
 | 概念 | 汽车 | AI Agent |
 |------|------|----------|
@@ -176,6 +189,38 @@ LangChain 团队将其归纳为四大策略，它们恰好映射到本教程的 
 
 ---
 
+## 行业上下文：为什么 2026 是 Harness 年
+
+### 从 Prompt 到 Context 到 Harness
+
+行业经历了三个清晰的演进阶段 [R1-6]：
+
+1. **Prompt Engineering（2023-2024）**：聚焦于"怎么问"——精心设计提示词，"Think step by step" 是核心方法论
+2. **Context Engineering（2025）**：聚焦于"带什么信息进去"——瓶颈从"你问什么"转向"问题周围提供了什么信息"（Karpathy）
+3. **Harness Engineering（2026）**：聚焦于"整个系统如何运作"——不只是 prompt 和 context，而是工具链、权限、压缩、持久化的完整系统工程
+
+Harrison Chase（LangChain）将三者区分为：**Framework 提供积木，Runtime 提供执行环境，Harness 是带观点的、面向生产的完整系统** [R1-4]。
+
+### 约束悖论：限制 Agent 反而提高生产力
+
+这是 2026 年最反直觉的发现之一。LangChain 用数据证明了这一点：**仅通过调整 harness（不换模型），编码 Agent 在 Terminal Bench 2.0 上从 52.8 提升到 66.5——纯靠 harness 工程提升了 13.7 个百分点** [R1-2]。
+
+Epsilla 总结的核心论点是：用规则、反馈循环和 linter 来**约束 Agent 的解空间，悖论性地提高了它的生产力和可靠性** [R1-7]。
+
+### 自评估偏差：为什么权限不是可选的
+
+Anthropic 发现了一个关键问题：**当你让 Agent 评估自己的输出时，它几乎总是会批准** [R1-5]。这被称为"自评估偏差"。这意味着 Claude Code 的权限系统（s04）和 Hooks（s05）**不是安全特性，而是质量特性**——它们对抗的是模型固有的自我认可偏差。
+
+### "Agent 不难，Harness 才难"
+
+Aakash Gupta："2025 was the year of agents. 2026 is the year of agent harnesses. The model is one component. The harness is what makes it reliable." 强模型有帮助，但没有坚实的 harness，你只是得到了"更快的失败模式"（faster failure modes）[R1-13]。
+
+Claude Code 被反复引用为现有最佳 harness 的代表案例——它之所以优于几乎所有其他 Agent，不是因为模型更强，而是因为它拥有正确的文件系统访问、正确的 harness 控制流、以及正确的上下文管理策略 [R1-1][R1-13]。
+
+> **参考来源：** Philschmid [R1-1]、LangChain [R1-2]、Anthropic [R1-5]、Harrison Chase [R1-4]、Aakash Gupta [R1-13]。完整引用见 `docs/research/05-harness-trends-deep-20260401.md`。
+
+---
+
 ## 推荐阅读
 
 开始课程前，推荐先浏览这些外部资源，建立更完整的背景认知：
@@ -186,7 +231,6 @@ LangChain 团队将其归纳为四大策略，它们恰好映射到本教程的 
 | [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/harness-design-for-coding-agents) | Anthropic 官方 | Harness 设计的官方指导 |
 | [Claude Code Architecture (Reverse Engineered)](https://vrungta.substack.com/) | 博客 | 社区视角的架构分析 |
 | [2026 Agentic Coding Trends Report](https://resources.anthropic.com/) | Anthropic 报告 | 行业趋势全景 |
-| [Context Management for Deep Agents](https://blog.langchain.com/) | LangChain 博客 | Context Engineering 四策略的来源 |
 
 ---
 

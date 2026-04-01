@@ -1,6 +1,8 @@
 # s05 — Hooks：用户可编程的自动化钩子
 
-> "Don't just react, automate"
+> "Don't just react, automate" · 预计阅读 18 分钟
+
+**核心洞察：Hooks 让用户在 Agent 的 27 个生命周期节点注入自定义逻辑——不改源码就能改变 Agent 行为。**
 
 ::: info Key Takeaways
 - **27 种生命周期钩子** — PreToolUse / PostToolUse / SessionStart / Stop / FileChanged 等
@@ -264,6 +266,9 @@ src/utils/hooks/hooksSettings.ts -- isHookEqual / getAllHooks
 ```
 
 ## Python 伪代码
+
+<details>
+<summary>展开查看完整 Python 伪代码（565 行）</summary>
 
 ```python
 """
@@ -832,6 +837,8 @@ if __name__ == "__main__":
     print(f"SessionStart results: {len(results)} hooks fired")
 ```
 
+</details>
+
 ## 源码映射
 
 | 概念 | 真实源码路径 | 说明 |
@@ -887,6 +894,20 @@ Hook 系统并非一开始就有四种类型。从源码结构和文件命名可
 - **其他**：非阻止性错误，stderr 只展示给用户
 
 选择 2 而非 1 作为"阻止"码，是因为 1 在 Unix 中通常表示"一般性错误"（命令执行失败），而 2 表示"misuse of shell builtins"。这里赋予了它新的语义——"有意的阻止"。
+
+## Why：设计决策与行业上下文
+
+### Hooks 是可编程安全中间件
+
+Claude Code 的 Hooks 机制允许用户在工具调用前后插入自定义脚本——本质上是一个**可编程的权限中间件** [R2-21]。这比静态规则更灵活：你可以用 hook 脚本在每次 bash 调用前检查命令是否包含危险操作，实现动态安全策略。
+
+### 为什么 Hooks 是质量特性而非安全特性
+
+Anthropic 发现的"自评估偏差"问题 [R1-5] 直接解释了 Hooks 的必要性：模型评估自己几乎总是批准。Hooks 提供了一个**外部验证通道**——让非模型的逻辑（linter、测试、安全扫描）介入 agent 的执行循环，打破自评估的闭环。
+
+LangChain 的实验也证明了这一点：harness 层的反馈循环和 linter 是提升 Agent 可靠性的关键旋钮 [R1-2]。Hooks 正是这些旋钮的可编程实现。
+
+> **参考来源：** Anthropic [R1-5]、LangChain [R1-2]、MorphLLM [R2-21]。完整引用见 `docs/research/` 目录下的调研报告。
 
 ## 变化表
 

@@ -1,6 +1,8 @@
 # s09 — Skills：两层知识注入
 
-> "Know what's available; load how on demand"
+> "Know what's available; load how on demand" · 预计阅读 20 分钟
+
+**核心洞察：50 个 token 的技能名称就能让模型知道"有这个能力"，5000 token 的完整内容只在需要时才加载——这是两层注入的精髓。**
 
 ::: info Key Takeaways
 - **两层注入** — Layer 1: ~50 token 技能名进 system prompt; Layer 2: 完整 SKILL.md 按需加载到 tool_result
@@ -204,6 +206,34 @@ MCP server 可以通过 `skill/` 资源前缀暴露 Skill。Claude Code 从 MCP 
 - 总共最多 25K tokens
 
 ## Python 伪代码
+
+两层注入的核心逻辑：
+
+```python
+# Skills 两层注入（精简版）
+
+# Layer 1: 名称层 — 随 system prompt 发送（~50 tokens/skill）
+def inject_skill_names(system_prompt, skills):
+    """只注入名称和一句话描述，不加载完整内容"""
+    menu = "\n".join(f"- {s.name}: {s.description}" for s in skills)
+    system_prompt += f"\nAvailable skills:\n{menu}"
+    # 模型现在知道"有这些技能可用"，但不知道具体怎么用
+
+# Layer 2: 内容层 — 模型调用 /skill 时才加载（~5K tokens/skill）
+def load_skill_on_demand(skill_name):
+    """读取完整 SKILL.md，作为 tool_result 注入"""
+    skill = find_skill(skill_name)
+    content = read_file(skill.path)          # 完整 Markdown 内容
+    content = truncate(content, max=5000)     # 截断保留头部
+    return {"type": "tool_result", "content": content}
+
+# 来源优先级: project > user > bundled > MCP
+```
+
+完整参考实现（含六种来源、路径条件激活、compact 恢复）：
+
+<details>
+<summary>展开查看完整 Python 伪代码（671 行）</summary>
 
 ```python
 """
@@ -878,6 +908,8 @@ async def main():
         print(f"[compact] restoring {len(attachment['skills'])} skills")
 ```
 
+</details>
+
 ## 源码映射
 
 | 概念 | 真实源码路径 | 说明 |
@@ -951,6 +983,20 @@ Skill 可能很大（verify=18.7KB, claude-api=20.1KB）。压缩后全量恢复
 - 总共限 25K tokens，最近使用的优先
 
 这比简单地丢弃整个 Skill 好得多——头部通常包含了最关键的指导信息。
+
+## Why：设计决策与行业上下文
+
+### Progressive Disclosure：90 年代 UX 智慧的 AI 应用
+
+Skills 的两层注入（名称层 ~50 token + 按需加载完整内容）是 **Progressive Disclosure**（渐进披露）策略的实现 [R1-11][R1-12]。这个概念源自 90 年代的 UX 设计原则：不在启动时展示所有功能，而是按需逐步披露。
+
+在 Agent 上下文中，这意味着：模型知道 WHAT is available（便宜，~50 token/skill），按需加载 HOW（贵，数千 token）。这是 token 成本优化的通用模式。
+
+### "From the agent's perspective, it's all just tools"
+
+Arcade.dev 指出：Skills、toolkits、functions、MCP servers 对模型而言**都是工具** [R2-7]。Skill 和 Tool 的分类是给人看的——对模型而言，它只关心描述是否清晰、行动空间是否完整。Claude Code 的 Skills 系统正是在这一认知上设计的：skill 被加载后，就变成了 system prompt 中的一段指令，与内置工具的描述没有本质区别。
+
+> **参考来源：** AI Positive [R1-12]、Arcade.dev [R2-7]。完整引用见 `docs/research/` 目录下的调研报告。
 
 ## 变化表
 

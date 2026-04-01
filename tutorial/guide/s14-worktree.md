@@ -1,6 +1,8 @@
 # s14 — Worktree：文件隔离与并行开发
 
-> "Tasks manage WHAT, worktrees manage WHERE"
+> "Tasks manage WHAT, worktrees manage WHERE" · 预计阅读 18 分钟
+
+**核心洞察：任务系统管"做什么"，Worktree 管"在哪做"——两个 Agent 可以同时编辑同一仓库而不冲突。**
 
 ::: info Key Takeaways
 - **任务管 WHAT，Worktree 管 WHERE** — Task 定义"做什么"，Worktree 提供"在哪做"的隔离目录
@@ -417,6 +419,9 @@ Claude Code 的多 agent 并发依赖两个正交的状态机：
 - 两个 FSM 可以独立演进
 
 ## Python 伪代码
+
+<details>
+<summary>展开查看完整 Python 伪代码（460 行）</summary>
 
 ```python
 """
@@ -880,6 +885,8 @@ def example_agent_worktree():
     )
 ```
 
+</details>
+
 ## 源码映射
 
 | 概念 | 真实源码路径 | 说明 |
@@ -937,6 +944,20 @@ Git worktree 的创建是毫秒级操作（本质只是创建目录和几个 git
 | Devin | Docker 容器（完整环境隔离） |
 | Cursor | 无隔离（单用户场景） |
 | Codex | 沙箱文件系统 |
+
+## Why：设计决策与行业上下文
+
+### 文件隔离解决并发冲突
+
+多 Agent 并发修改文件是一个经典的分布式系统问题。Claude Code 用 Git worktree 提供了一个优雅的解决方案：同一仓库、不同目录、独立分支——**天然避免文件冲突**。
+
+这与 Cursor 的做法形成对比：Cursor 使用 "Dynamic Context Discovery" 在单一工作目录中协调多个任务 [R2-13]，而 Claude Code 选择了更简单的物理隔离方案。简单方案的优势是**零协调开销**——每个 Agent 在自己的 worktree 中自由操作，merge 冲突留到最后解决。
+
+### 控制平面与执行平面分离
+
+Worktree 系统体现了一个重要的架构分离：**控制平面**（任务系统）管理 WHAT to do，**执行平面**（worktree）管理 WHERE to do it。这种分离让任务调度和文件操作互不干扰。
+
+> **参考来源：** Cursor/ZenML [R2-13]。完整引用见 `docs/research/06-agent-architecture-deep-20260401.md`。
 
 ## 变化表
 

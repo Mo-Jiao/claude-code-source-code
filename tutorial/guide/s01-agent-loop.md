@@ -1,6 +1,8 @@
 # s01 — Agent 循环：一切的起点
 
-> "One loop is all you need"
+> "One loop is all you need" · 预计阅读 15 分钟
+
+**核心洞察：Claude Code 的核心循环不到 30 行，但包裹它的 Harness 有 51 万行——复杂度从来不在循环本身。**
 
 ::: info Key Takeaways
 - **核心循环惊人地简单** — `while(true) { call_model() → if tool_use → execute → loop }` 不到 30 行
@@ -18,6 +20,8 @@
 这节课我们将拆解这个循环的完整调用链：从 CLI 入口到消息循环的每一步，理解 Claude Code 如何在 30 行核心逻辑上构建出一个强大的编程助手。
 
 ## 架构图
+
+![Agent Loop 流程图](/diagrams/s01-agent-loop-flow.png)
 
 ```mermaid
 graph TD
@@ -187,6 +191,34 @@ const [branch, mainBranch, status, log, userName] = await Promise.all([
 消息列表随循环不断累积。当上下文窗口接近容量限制时，自动压缩（auto-compact）机制会触发，将历史消息总结为简短摘要，释放 token 空间。
 
 ## Python 伪代码
+
+核心循环可以浓缩为这 20 行：
+
+```python
+# Agent 核心循环（精简版）
+while True:
+    response = client.messages.create(model, system, messages, tools)
+    
+    if response.stop_reason == "end_turn":
+        return response           # 模型回复用户，结束
+    
+    if response.stop_reason == "tool_use":
+        for block in response.content:
+            if block.type == "tool_use":
+                result = execute_tool(block.name, block.input)
+                messages.append({"role": "user", "content": [
+                    {"type": "tool_result", "tool_use_id": block.id, "content": result}
+                ]})
+        continue                  # 把工具结果喂回模型，继续循环
+    
+    if response.stop_reason == "max_tokens":
+        retry()                   # 超长输出，恢复重试
+```
+
+完整参考实现（含流式处理、工具注册、双模式架构）：
+
+<details>
+<summary>展开查看完整 Python 伪代码（240 行）</summary>
 
 ```python
 """
@@ -431,6 +463,8 @@ if __name__ == "__main__":
     main()
 ```
 
+</details>
+
 ## 源码映射
 
 | 概念 | 真实源码路径 | 说明 |
@@ -482,6 +516,34 @@ Claude Code 团队践行 Boris Cherny 提出的 "苦涩教训"（The Bitter Less
 2. **延迟计算**：只在需要时执行下一步，节省资源
 3. **中断友好**：generator 可以随时通过 `.return()` 中止
 4. **流式兼容**：完美配合 SSE、WebSocket 等流式传输协议
+
+## Why：设计决策与行业上下文
+
+### 为什么核心循环可以这么简单？
+
+2025 年最令人意外的行业共识：生产级 Agent 的核心循环可以压缩到 **9 行代码**。sketch.dev 的 Philip Zeyliger 写道："The thing I've been most surprised by is how shockingly simple the main loop of using an LLM with tool use is." [R2-1]
+
+Browser Use 团队将这一理念提炼为一句话：**"The only state an agent should have is: keep going until the model stops calling tools."** [R2-2] 他们的 agent-sdk 仓库开宗明义："An agent is just a for-loop." [R2-3]
+
+为什么简单有效？Vercel 的 Andrew Qu 总结："Models are getting smarter and context windows are getting larger, so maybe the best agent architecture is almost no architecture at all." [R2-4] 当模型能力足够强时，复杂的编排框架反而成为瓶颈。
+
+### Done Tool 模式：为什么朴素停止策略会失败
+
+Browser Use 指出了一个反直觉的细节：朴素的"模型不再调用工具时停止"策略会导致 Agent **过早结束任务**。正确做法是提供一个显式的 `done` 工具，只有当模型主动调用它时才认为任务结束 [R2-3]。
+
+Claude Code 采用了类似思路：通过 `stop_reason === 'end_turn'` 来判断模型是否主动选择结束，而非依赖"无工具调用"这个弱信号。
+
+### 苦涩教训在循环设计中的体现
+
+Browser Use 用自己的失败验证了 Rich Sutton 的"苦涩教训"："The first version of Browser Use was a classic agent framework: a model wrapped in a complex message manager..." 然后他们发现：**"Agent frameworks fail not because models are weak, but because their action spaces are incomplete."** [R2-2]
+
+更激进的验证：**"A prototype agent that only wrote code did better than one with all of our tools."** 一个只会写代码的原型 Agent 打败了拥有全部工具的正式版本 [R2-24]。
+
+这解释了为什么 Claude Code 的核心循环如此简洁——复杂度不应该加在循环上，而应该加在**行动空间**（工具系统）和**上下文管理**（Harness）上。
+
+> **参考来源：** sketch.dev [R2-1]、Browser Use [R2-2][R2-3]、Vercel [R2-4]。完整引用见 `docs/research/06-agent-architecture-deep-20260401.md`。
+
+---
 
 ## 动手试试
 
@@ -564,5 +626,3 @@ cat <session-file>.jsonl | jq -r '.type' | sort | uniq -c | sort -rn
 ## 推荐阅读
 
 - [The Unreasonable Effectiveness of an LLM Agent Loop](https://sketch.dev/blog/agent-loop) — 核心循环为什么如此简单却有效
-- [AWS re:Invent: What Anthropic Learned Building AI Agents](https://dev.to/) — 构建 Agent 的大部分时间花在 context engineering 上
-- [Stop Debugging Your Agent as One Loop. It's Three.](https://medium.com/) — Agent 实际是三层嵌套循环：规划/执行/工具调用
