@@ -29,6 +29,30 @@ const SOURCE_SECTIONS = ["源码映射", "Python 伪代码"];
 const DEEP_DIVE_SECTIONS = ["Why", "动手试试", "推荐阅读"];
 // Everything else goes to "learn"
 
+// Map MD image paths to actual diagram filenames in public/diagrams/
+const IMAGE_PATH_MAP: Record<string, string> = {
+  "/diagrams/s01-agent-loop-flow.png": "/diagrams/s01-agent-loop.png",
+  "/diagrams/s02-tool-pipeline.png": "/diagrams/s02-tool-pipeline.png",
+  "/diagrams/s04-permission-pipeline.png": "/diagrams/s04-permission-waterfall.png",
+  "/diagrams/s07-compression-layers.png": "/diagrams/s07-compression.png",
+};
+
+function fixImagePaths(content: string): string {
+  // Rewrite known image paths to match actual filenames
+  for (const [from, to] of Object.entries(IMAGE_PATH_MAP)) {
+    content = content.replace(from, to);
+  }
+  // Remove image references that have no corresponding file
+  content = content.replace(/!\[[^\]]*\]\(\/diagrams\/[^)]+\)\n?/g, (match) => {
+    const src = match.match(/\(([^)]+)\)/)?.[1] || "";
+    if (Object.values(IMAGE_PATH_MAP).some(p => src === p)) {
+      return match; // keep — file exists
+    }
+    return ""; // remove — no file
+  });
+  return content;
+}
+
 function extractSections(content: string): { learn: string; source: string; deepDive: string } {
   const sections = content.split(/(?=^## )/m);
 
@@ -86,7 +110,8 @@ function main() {
 
     const content = fs.readFileSync(path.join(GUIDE_DIR, file), "utf-8");
     const withoutH1 = content.replace(/^# .+\n/, "");
-    const sections = extractSections(withoutH1);
+    const withFixedImages = fixImagePaths(withoutH1);
+    const sections = extractSections(withFixedImages);
 
     docs.push({ id, ...sections });
     console.log(`  ${id}: learn=${sections.learn.length}c source=${sections.source.length}c deep=${sections.deepDive.length}c`);
