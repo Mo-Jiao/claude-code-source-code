@@ -2,6 +2,13 @@
 
 > "Forget wisely, remember what matters"
 
+::: info Key Takeaways
+- **三层压缩策略** — micro-compact (工具结果裁剪) → auto-compact (阈值触发摘要) → manual-compact (手动)
+- **LLM 做摘要** — 用一次额外的 API 调用将旧消息压缩为摘要，保留关键信息
+- **compact_boundary 标记** — 分隔"已压缩"和"完整保留"的消息边界
+- **Context Engineering = Compress** — 这是四策略中最直接的压缩实现
+:::
+
 ## 问题
 
 对话越来越长，上下文窗口装不下了怎么办？
@@ -862,3 +869,9 @@ token budget 的设计也很讲究：最多 5 个文件，每个最多 5K tokens
 - 文件恢复：从 `readFileState` 缓存中取最近 5 个文件，每个限 5K tokens，总共限 50K tokens
 - Skill 恢复：每个 Skill 限 5K tokens，总共限 25K tokens，按最近使用排序
 - 构建完整的 `CompactionResult` 包含 boundary + summary + attachments
+
+## 推荐阅读
+
+- [Building an internal agent: Context window compaction (Will Larson)](https://lethain.com/) — 实际工程中的上下文压缩实践
+- [Context Compaction Research: Claude Code vs Codex](https://gist.github.com/) — 跨工具压缩策略对比
+- [Context rot research (Chroma)](https://blog.langchain.com/) — "上下文腐化"：长会话中信息质量如何衰减

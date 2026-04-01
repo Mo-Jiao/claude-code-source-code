@@ -2,6 +2,13 @@
 
 > "Don't just react, automate"
 
+::: info Key Takeaways
+- **27 种生命周期钩子** — PreToolUse / PostToolUse / SessionStart / Stop / FileChanged 等
+- **四种执行模式** — command (Shell) / prompt (AI) / agent (子 Agent) / http (Webhook)
+- **Matcher 过滤** — 基于工具名和参数的精确匹配，避免不必要的钩子触发
+- **Context Engineering = Select** — Hooks 决定哪些信息和行为被注入 Agent 工作流
+:::
+
 ## 问题
 
 上一课讲了权限系统如何控制 agent 的行为边界。但在实际使用中，用户往往需要的不仅是"允许/拒绝"的二元决策，而是**在 agent 工作流的关键节点注入自定义逻辑**。
@@ -935,3 +942,7 @@ fi
 - 显示每个 hook 的执行结果和耗时
 
 思考：这个工具在实际开发中如何帮助用户调试 hook 配置问题？
+
+## 推荐阅读
+
+- [Effective harnesses for long-running agents (Anthropic)](https://www.anthropic.com/engineering/) — 官方 harness 设计中的 Hook 模式

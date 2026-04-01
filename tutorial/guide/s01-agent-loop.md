@@ -2,6 +2,13 @@
 
 > "One loop is all you need"
 
+::: info Key Takeaways
+- **核心循环惊人地简单** — `while(true) { call_model() → if tool_use → execute → loop }` 不到 30 行
+- **复杂度不在循环本身，而在循环之外** — 99% 的代码是 Harness（权限、压缩、持久化...）
+- **双模式架构** — REPL（人类交互）和 SDK（程序集成）共享同一个 QueryEngine 核心
+- **流式处理** — AsyncGenerator 实现从 API 到 UI 的全链路流式传输
+:::
+
 ## 问题
 
 一个 AI 编程助手的核心运转机制是什么？
@@ -553,3 +560,9 @@ cat <session-file>.jsonl | jq -r '.type' | sort | uniq -c | sort -rn
 ```
 
 观察 `user → assistant → user(tool_result) → assistant` 的消息交替模式，这就是 agent 循环的物证。
+
+## 推荐阅读
+
+- [The Unreasonable Effectiveness of an LLM Agent Loop](https://sketch.dev/blog/agent-loop) — 核心循环为什么如此简单却有效
+- [AWS re:Invent: What Anthropic Learned Building AI Agents](https://dev.to/) — 构建 Agent 的大部分时间花在 context engineering 上
+- [Stop Debugging Your Agent as One Loop. It's Three.](https://medium.com/) — Agent 实际是三层嵌套循环：规划/执行/工具调用

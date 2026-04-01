@@ -2,6 +2,13 @@
 
 > "Every token in the prompt has a price tag"
 
+::: info Key Takeaways
+- **四层提示词结构** — 静态前缀 → 工具描述 → 动态上下文 → 用户消息，顺序影响缓存命中率
+- **Prompt Cache 是性能关键** — 90%+ 缓存命中率可将 token 成本降低 ~7 倍
+- **Context Engineering = Select** — 系统提示词组装的核心是"选择放入什么"
+- **splitSysPromptPrefix 边界** — 将提示词切为两部分，前半部分最大化缓存复用
+:::
+
 ## 问题
 
 Claude 每次回复前看到的完整提示词是怎么拼出来的？为什么顺序很重要？
@@ -902,3 +909,8 @@ claude --dump-system-prompt > system_prompt.txt
 wc -l system_prompt.txt  # 查看行数
 wc -c system_prompt.txt  # 查看字节数
 ```
+
+## 推荐阅读
+
+- [Context Engineering (Simon Willison)](https://simonwillison.net/) — "Context Engineering" 如何取代 "Prompt Engineering"
+- [Context Management for Deep Agents (LangChain)](https://blog.langchain.com/) — Write/Select/Compress/Isolate 四策略

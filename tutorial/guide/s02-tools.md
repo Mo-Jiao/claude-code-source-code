@@ -2,6 +2,13 @@
 
 > "Tools are the hands of the agent"
 
+::: info Key Takeaways
+- **最小可用工具集** — Bash + Read + Write + Edit + Grep + Glob 就能完成绝大多数编码任务
+- **延迟加载** — 工具描述分两层注入：名称进 system prompt，完整描述按需加载，节省 token
+- **并发安全标记** — 每个工具声明 `isConcurrencySafe()`，读操作可并行，写操作串行
+- **fail-closed 原则** — 工具默认不可用，必须显式启用
+:::
+
 ## 问题
 
 40+ 工具如何注册、分发、执行？工具多了怎么省 token？
@@ -865,3 +872,8 @@ claude -p "Read package.json and tell me the project name" --tools "Bash"
 # 只给 Read 工具
 claude -p "Read package.json and tell me the project name" --tools "Read"
 ```
+
+## 推荐阅读
+
+- [Tool Use Patterns: Building Reliable Agent-Tool Interfaces](https://aiagentsblog.com/) — 工具 schema 设计与结果处理
+- [Building AI Agents with Tool Use: Patterns That Work in Production](https://dev.to/) — 2026 年生产环境中的工具调用模式

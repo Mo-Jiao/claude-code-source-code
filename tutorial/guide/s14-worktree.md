@@ -2,6 +2,13 @@
 
 > "Tasks manage WHAT, worktrees manage WHERE"
 
+::: info Key Takeaways
+- **任务管 WHAT，Worktree 管 WHERE** — Task 定义"做什么"，Worktree 提供"在哪做"的隔离目录
+- **Git worktree 原语** — 基于 `git worktree add` 创建轻量级工作副本
+- **两层隔离** — 会话级 (EnterWorktree/ExitWorktree) + Agent 级 (isolation: "worktree")
+- **Context Engineering = Isolate** — 文件系统级隔离，防止并行 Agent 互相覆盖文件
+:::
+
 ## 问题
 
 多个 agent 同时修改文件怎么避免冲突？
@@ -949,3 +956,7 @@ Git worktree 的创建是毫秒级操作（本质只是创建目录和几个 git
 2. **阅读安全验证**：在 `src/utils/worktree.ts` 中找到 `validateWorktreeSlug` 函数，尝试构造会导致路径穿越的 slug（如 `../../etc`），验证它会被拒绝。然后看 `flattenSlug` 如何处理 `user/feature` 这样的嵌套 slug。
 
 3. **分析清理策略**：阅读 `cleanupStaleAgentWorktrees` 函数，理解它的四层安全检查（模式匹配 → 当前会话 → 修改时间 → git 状态）。思考一个问题：如果 agent 在 worktree 中创建了一个新文件但没有 `git add`，这个文件在清理时会怎么处理？（提示：`-uno` 标志的作用。）
+
+## 推荐阅读
+
+- [VS Code: Home for Multi-Agent Development](https://code.visualstudio.com/) — VS Code 如何支持多 Agent 并行开发

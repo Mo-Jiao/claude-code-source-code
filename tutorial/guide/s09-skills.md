@@ -2,6 +2,17 @@
 
 > "Know what's available; load how on demand"
 
+::: info Key Takeaways
+- **两层注入** — Layer 1: ~50 token 技能名进 system prompt; Layer 2: 完整 SKILL.md 按需加载到 tool_result
+- **六种来源** — bundled / user / project / MCP / dynamic / conditional
+- **路径条件激活** — 基于文件路径的 Skill 条件加载，减少无关信息
+- **Context Engineering = Select** — Skill 系统是"选择放入什么"的典型实现
+:::
+
+::: warning 安全提示
+**ToxicSkills** 研究 (Snyk) 发现了针对 Agent Skills 的供应链攻击，恶意 Skill 可注入有害指令。安装第三方 Skill 前务必审查内容。
+:::
+
 ## 问题
 
 如何让 agent 拥有可扩展的领域知识？
@@ -980,3 +991,8 @@ Skill 可能很大（verify=18.7KB, claude-api=20.1KB）。压缩后全量恢复
 - 总共不超过 25K tokens
 - 截断时附加标记告知模型可以 Read 完整文件
 - 验证：最近使用的 Skill 优先恢复
+
+## 推荐阅读
+
+- [ToxicSkills: Agent Skills Supply Chain Compromise (Snyk)](https://snyk.io/) — Skills 供应链安全审计
+- [Memory Injection Through Nested Skills (snailsploit)](https://snailsploit.com/) — 嵌套 Skill 注入攻击

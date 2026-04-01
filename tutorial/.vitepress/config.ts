@@ -14,6 +14,7 @@ export default withMermaid(
       nav: [
         { text: '教程', link: '/guide/' },
         { text: '源码索引', link: '/reference/source-map' },
+        { text: '术语表', link: '/reference/glossary' },
       ],
 
       sidebar: {

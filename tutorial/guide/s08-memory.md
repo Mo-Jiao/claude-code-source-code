@@ -2,6 +2,17 @@
 
 > "An agent without memory starts every conversation as a stranger"
 
+::: info Key Takeaways
+- **双轨记忆** — CLAUDE.md (规则型，用户手写) + Auto Memory (文件型，AI 自动沉淀)
+- **四种记忆类型** — user / feedback / project / reference，各有不同的触发和使用时机
+- **200 行 / 25KB 限制** — MEMORY.md 索引有上限，防止记忆膨胀
+- **Context Engineering = Write** — 记忆是"持久化到窗口之外"的经典实现
+:::
+
+::: warning 安全提示
+Memory 系统存在 **Memory Poisoning** 攻击面：恶意 prompt injection 可污染跨会话记忆，实现持久化攻击。Claude Code 通过 caveat 注入和验证检查来缓解此风险。
+:::
+
 ## 问题
 
 如何让 agent 跨对话保持记忆？
@@ -936,3 +947,8 @@ Claude Code 的 prompt 中明确区分了三种持久化机制：
 - `inject_relevant_memories()`：每轮对话前检索并注入相关记忆
 - `truncate_entrypoint_content()`：MEMORY.md 超限时截断并附加警告
 - 集成到 agent 循环中：system prompt 注入 + 每轮 attachment 注入
+
+## 推荐阅读
+
+- [Memory poisoning in AI agents (christian-schneider.net)](https://christian-schneider.net/) — Memory Poisoning 攻击面分析
+- [Engineering Memory for AI Agents: A Practical Guide](https://medium.com/) — 短期 vs 长期记忆设计

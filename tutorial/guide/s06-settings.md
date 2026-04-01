@@ -2,6 +2,13 @@
 
 > "Configuration is a contract between user and system"
 
+::: info Key Takeaways
+- **六层配置层级** — plugin → user → project → local → flag → policy，越往下优先级越高
+- **Policy Settings** — 企业通过 MDM 强制下发安全策略，first-wins 不可覆盖
+- **数组合并定制器** — 配置合并时数组拼接而非覆盖，支持多层叠加
+- **Context Engineering = Write** — 设置持久化到磁盘，跨会话生效
+:::
+
 ## 问题
 
 一个工程师在公司用 Claude Code 写代码。他有自己的全局偏好（比如用 Vim 键位），项目有共享配置（比如 lint 规则），他本地还有一些不想提交的个人设置（比如 API key），公司的安全团队通过策略强制禁用了 `bypassPermissions` 模式。
@@ -863,3 +870,7 @@ assert result["model"] == "opus"  # 标量被覆盖
 ```
 
 思考：对于数组字段的拼接合并，如何追踪每个元素的来源？这比标量覆盖要复杂得多。
+
+## 推荐阅读
+
+- [Claude Code CLAUDE.md Best Practices](https://uxplanet.org/) — CLAUDE.md 配置的 10 个推荐章节

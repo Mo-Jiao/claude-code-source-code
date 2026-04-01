@@ -2,6 +2,17 @@
 
 > "The agent is only as powerful as the tools it can reach"
 
+::: info Key Takeaways
+- **六种传输协议** — stdio / sse / http / ws / sse-ide / sdk，覆盖从本地到远程的所有场景
+- **工具命名规范** — `mcp__{server}__{tool}`，命名空间隔离避免冲突
+- **OAuth + XAA 认证** — 支持 OAuth 2.0 流程和跨应用访问 (SEP-990)
+- **MCP 累计 9700 万下载** — 已成为 Agent 工具集成的行业标准
+:::
+
+::: tip MCP vs A2A
+MCP 解决 Agent → 工具的 **垂直集成**；Google 的 A2A 协议解决 Agent → Agent 的 **水平协作**。两者互补，被类比为"AI 的 OSI 模型层"。2026 企业栈正在向 MCP + A2A + ACP 多协议生态演进。
+:::
+
 ## 问题
 
 如何让 agent 连接数据库、API、第三方服务？
@@ -651,3 +662,9 @@ Claude Code 选择 MCP 的理由：
 - **延迟加载**：仅在特定条件下需要的工具
 
 画出你的工具生态架构图，标注每个工具的加载策略。
+
+## 推荐阅读
+
+- [Code execution with MCP (Anthropic)](https://www.anthropic.com/) — MCP 官方最新进展
+- [Guide to AI Agent Protocols (Google Developers)](https://developers.googleblog.com/) — Google 视角的 Agent 协议全景
+- [MCP and A2A are AI's new OSI model layers](https://apigene.ai/) — MCP vs A2A 互补关系分析

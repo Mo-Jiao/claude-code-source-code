@@ -2,6 +2,13 @@
 
 > "Measure twice, cut once"
 
+::: info Key Takeaways
+- **状态机设计** — Plan 模式是权限模式切换，不是工具集切换，保护 Prompt Cache 不失效
+- **EnterPlanMode / ExitPlanMode** — 两个工具控制进入和退出，ExitPlanMode 携带权限批处理
+- **语义权限批处理** — 退出 Plan 时可批量授权一组操作，减少后续权限确认弹窗
+- **Cache 友好** — 不改变工具列表，不改变 system prompt，最大化缓存复用
+:::
+
 ## 问题
 
 如何让 agent 在动手之前先对齐方案？
@@ -632,3 +639,7 @@ Claude Code 还在实验一个更结构化的计划流程——"Interview Phase"
 - **方案 B**：保持工具集不变，用权限模式约束（Claude Code 的做法）
 - 假设 system prompt 为 10000 tokens，工具定义占 3000 tokens
 - 计算在一次计划会话（进入 + 5 轮探索 + 退出）中，两种方案的 Cache 命中率差异
+
+## 推荐阅读
+
+- [Harness design for long-running application development (Anthropic)](https://www.anthropic.com/engineering/) — 长时运行 Agent 的质量控制

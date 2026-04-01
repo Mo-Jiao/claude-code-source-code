@@ -2,6 +2,13 @@
 
 > "See the forest, then the trees"
 
+::: info Key Takeaways
+- **启动四阶段** — parse CLI → init config → get tools → start REPL/SDK，并发副作用优化启动速度
+- **查询完整生命周期** — input → prompt assembly → agent loop → tool execution → context management → output
+- **七大 Harness 设计优势** — Claude Code 为何在同模型下表现优于竞品的工程原因
+- **从源码到思想** — 16 课不是终点，而是构建你自己 Agent Harness 的起点
+:::
+
 ## 问题
 
 所有模块如何协同工作？端到端的完整流程是什么？
@@ -605,3 +612,9 @@ Claude Code 的性能优化分布在每一层：
 这些问题的答案，比任何具体的代码实现都更有价值。
 
 祝你在 agent 开发之路上，走得更远。
+
+## 推荐阅读
+
+- [2026 Agentic Coding Trends Report (Anthropic)](https://resources.anthropic.com/) — Anthropic 官方 8 大趋势报告
+- [Effective harnesses for long-running agents (Anthropic)](https://www.anthropic.com/engineering/) — Harness 设计的官方指导
+- [claude-code-reverse: Prompt flow visualization (GitHub)](https://github.com/Yuyz0112/claude-code-reverse) — 可视化 Claude Code 的 prompt 流和 agent 工作流

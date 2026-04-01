@@ -2,6 +2,13 @@
 
 > "Clean context per subtask"
 
+::: info Key Takeaways
+- **完整上下文隔离** — 子 Agent 获得全新 messages[]，不继承父 Agent 的对话历史
+- **四种 Agent 类型** — Explore (只读) / general-purpose (全能力) / Plan (规划) / 自定义 (.claude/agents/*.md)
+- **工具白名单/黑名单** — 每种 Agent 类型有不同的工具集限制
+- **Context Engineering = Isolate** — 子 Agent 是"给子任务独立上下文空间"的核心实现
+:::
+
 ## 问题
 
 父 agent 对话越来越长，工具结果堆积怎么办？
@@ -626,3 +633,8 @@ Fork 的设计目标是**最大化 prompt cache 命中**。所有 fork 子 agent
 2. **创建自定义 Agent**：在项目的 `.claude/agents/` 目录下创建一个 `lint-checker.md` 文件，定义一个只读的 lint 检查 agent，工具限制为 `[Bash, Read]`，model 设为 `haiku`。然后在对话中请求 Claude Code 检查代码风格，观察它是否使用了你定义的 agent。
 
 3. **对比同步和异步执行**：请求 Claude Code 同时执行两个独立任务（如搜索代码和运行测试）。观察它是否将其中一个设为 `run_in_background: true`，以及异步 agent 完成后通知是如何送达的。
+
+## 推荐阅读
+
+- [Reverse-Engineering Claude Code Sub Agents (sabrina.dev)](https://sabrina.dev/) — 社区对子 Agent 机制的逆向分析
+- [Building own coding agent harness (dev.to)](https://dev.to/) — Docker 沙箱化 Agent Harness 实践
