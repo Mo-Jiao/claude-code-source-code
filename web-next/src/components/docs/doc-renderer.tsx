@@ -25,6 +25,17 @@ function renderMarkdown(md: string): string {
   return String(result);
 }
 
+function preProcessContainers(md: string): string {
+  // Convert VitePress-style ::: containers to HTML before remark
+  return md.replace(
+    /^::: (info|warning|tip|danger)(?: (.+))?\n([\s\S]*?)^:::\s*$/gm,
+    (_match, type: string, title: string | undefined, body: string) => {
+      const heading = title ? `<p class="container-title">${title}</p>` : "";
+      return `<div class="custom-container ${type}">${heading}\n\n${body.trim()}\n\n</div>`;
+    }
+  );
+}
+
 function postProcessHtml(html: string): string {
   // Add language labels to highlighted code blocks
   html = html.replace(
@@ -42,7 +53,8 @@ function postProcessHtml(html: string): string {
 export function DocRenderer({ content }: DocRendererProps) {
   const html = useMemo(() => {
     if (!content) return "<p class='text-zinc-500'>暂无内容</p>";
-    const raw = renderMarkdown(content);
+    const preprocessed = preProcessContainers(content);
+    const raw = renderMarkdown(preprocessed);
     return postProcessHtml(raw);
   }, [content]);
 

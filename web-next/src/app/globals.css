@@ -468,6 +468,111 @@ body {
   color: #a1a1aa;
 }
 
+/* -- Images -- */
+
+.prose-custom img {
+  border-radius: 0.75rem;
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid #e2e8f0;
+}
+
+.dark .prose-custom img {
+  border-color: #27272a;
+}
+
+/* -- VitePress-style custom containers -- */
+
+.prose-custom .custom-container {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+
+.prose-custom .custom-container .container-title {
+  font-weight: 700;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.prose-custom .custom-container.info {
+  background-color: #eff6ff;
+  border-left: 4px solid #3b82f6;
+}
+
+.prose-custom .custom-container.info .container-title {
+  color: #1d4ed8;
+}
+
+.dark .prose-custom .custom-container.info {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-left-color: #60a5fa;
+}
+
+.dark .prose-custom .custom-container.info .container-title {
+  color: #93c5fd;
+}
+
+.prose-custom .custom-container.tip {
+  background-color: #f0fdf4;
+  border-left: 4px solid #22c55e;
+}
+
+.prose-custom .custom-container.tip .container-title {
+  color: #15803d;
+}
+
+.dark .prose-custom .custom-container.tip {
+  background-color: rgba(34, 197, 94, 0.1);
+  border-left-color: #4ade80;
+}
+
+.dark .prose-custom .custom-container.tip .container-title {
+  color: #86efac;
+}
+
+.prose-custom .custom-container.warning {
+  background-color: #fffbeb;
+  border-left: 4px solid #f59e0b;
+}
+
+.prose-custom .custom-container.warning .container-title {
+  color: #b45309;
+}
+
+.dark .prose-custom .custom-container.warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-left-color: #fbbf24;
+}
+
+.dark .prose-custom .custom-container.warning .container-title {
+  color: #fde68a;
+}
+
+.prose-custom .custom-container.danger {
+  background-color: #fef2f2;
+  border-left: 4px solid #ef4444;
+}
+
+.prose-custom .custom-container.danger .container-title {
+  color: #b91c1c;
+}
+
+.dark .prose-custom .custom-container.danger {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-left-color: #f87171;
+}
+
+.dark .prose-custom .custom-container.danger .container-title {
+  color: #fca5a5;
+}
+
 /* =====================================================
    HIGHLIGHT.JS TOKEN THEME (code syntax highlighting)
    ===================================================== */
