@@ -72,7 +72,7 @@ flowchart TB
 
 ## 核心机制
 
-### 1. 五层配置源
+### 1. 六层配置源
 
 Claude Code 的配置按优先级从低到高排列：
 
@@ -88,8 +88,10 @@ Claude Code 的配置按优先级从低到高排列：
 合并顺序是"后面覆盖前面"——`policySettings` 总是最终裁决者。
 
 ```
-src/utils/settings/constants.ts -- SETTING_SOURCES 定义
+src/utils/settings/constants.ts -- SETTING_SOURCES 定义（5 种显式来源）
 ```
+
+> **注意**：`SETTING_SOURCES` 常量只定义了 5 种来源（user / project / local / flag / policy）。Plugin Settings 不在此常量中，而是在 `loadSettingsFromDisk` 中作为最低优先级的隐式基础层单独加载。因此，实际加载层级为 6 层。
 
 ### 2. 合并策略
 
@@ -892,6 +894,23 @@ assert result["model"] == "opus"  # 标量被覆盖
 
 思考：对于数组字段的拼接合并，如何追踪每个元素的来源？这比标量覆盖要复杂得多。
 
+### 综合练习：端到端安全策略配置（s04-s06 三课综合）
+
+1. 在 `~/.claude/settings.json` 中添加 deny 规则禁止 `rm -rf`
+2. 配置一个 PreToolUse hook 记录所有 Bash 命令到 `/tmp/claude-audit.log`
+3. 分别用 `default` 和 `bypassPermissions` 模式测试，观察行为差异
+4. 思考：`bypassPermissions` 模式下 deny 规则是否仍然生效？（提示：查看 safetyCheck 的免疫设计——deny 规则在 Phase 1 检查，优先级高于任何模式，所以 bypass 也无法绕过 deny rule。）
+
 ## 推荐阅读
 
 - [Claude Code CLAUDE.md Best Practices](https://uxplanet.org/) — CLAUDE.md 配置的 10 个推荐章节
+
+---
+
+## 模拟场景
+
+<!--@include: ./_fragments/sim-s06.md-->
+
+## 设计决策
+
+<!--@include: ./_fragments/ann-s06.md-->

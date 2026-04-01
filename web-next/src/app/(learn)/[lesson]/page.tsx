@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { LESSON_ORDER, LESSON_META, LAYERS } from "@/lib/constants";
+import { LESSON_ORDER, LESSON_META, LAYERS, type LessonId } from "@/lib/constants";
 import { LayerBadge } from "@/components/ui/badge";
 import { LessonDetailClient } from "./client";
 import docsData from "@/data/generated/docs.json";
+import type { DocsData } from "@/types/agent-data";
 
 export function generateStaticParams() {
   return LESSON_ORDER.map((lesson) => ({ lesson }));
@@ -15,7 +16,7 @@ export default async function LessonPage({
 }) {
   const { lesson } = await params;
 
-  const meta = LESSON_META[lesson];
+  const meta = LESSON_META[lesson as LessonId];
 
   if (!meta) {
     return (
@@ -28,7 +29,7 @@ export default async function LessonPage({
 
   const layer = LAYERS.find((l) => l.id === meta.layer);
 
-  const doc = (docsData as any).docs.find((d: any) => d.id === lesson);
+  const doc = (docsData as DocsData).docs.find((d) => d.id === lesson);
 
   const pathIndex = LESSON_ORDER.indexOf(lesson as typeof LESSON_ORDER[number]);
   const prevLesson = pathIndex > 0 ? LESSON_ORDER[pathIndex - 1] : null;

@@ -74,14 +74,14 @@ Claude Code 中每个工具都遵循统一的 `Tool` 接口。这个接口定义
 ```typescript
 export type Tool = {
   name: string                    // 工具名称，如 "Bash", "Read"
-  description(input): string      // 动态描述（可以基于输入变化）
+  description(input, options): Promise<string>  // 异步动态描述（可根据上下文动态调整，如基于当前工具状态生成不同说明）
   inputSchema: ZodSchema          // Zod 输入验证 schema
   maxResultSizeChars: number      // 结果最大字符数
   
   // --- 行为控制 ---
   call(args, context): ToolResult         // 核心执行逻辑
-  validateInput(input, context): boolean  // 输入合法性校验
-  checkPermissions(input, context): PermissionResult  // 权限判定
+  validateInput?(input, context): Promise<ValidationResult>  // 可选，异步输入合法性校验
+  checkPermissions(input, context): { behavior: 'allow' | 'deny' | 'ask' | ..., updatedInput }  // 权限判定，behavior 是枚举而非简单 boolean
   
   // --- 元信息 ---
   isEnabled(): boolean            // 是否启用
@@ -155,6 +155,8 @@ export function getTools(permissionContext): Tools {
 
 没有 registry pattern，没有 service locator -- 就是显式导入 + 数组过滤。简单、可追踪、IDE 友好。
 
+> **条件加载机制**：真实的 `src/tools.ts` 大量使用 `feature()` 门控和 lazy `require()`。例如 `SleepTool` 仅在 `feature('PROACTIVE') || feature('KAIROS')` 时加载。`feature()` 宏在构建时做死代码消除，未发布的内部工具通过此机制从 npm 包中移除。
+
 工具的分发也同样简单 -- 通过名称查找：
 
 ```typescript
@@ -193,6 +195,8 @@ export function isDeferredTool(tool: Tool): boolean {
   return tool.shouldDefer ?? true
 }
 ```
+
+> 真实的延迟判定比教程简化版更复杂：MCP 工具默认延迟加载；Agent 工具仅在 `feature('FORK_SUBAGENT') && isForkSubagentEnabled()` 时不延迟；还需检查 `isMcp` 标记。
 
 这个设计灵感来自 Vercel 的实验数据：**删掉 80% 的工具后，准确率从 80% 升到 100%，token 减少约 37%，速度快 3.5x**。工具越少，模型越专注。
 
@@ -853,6 +857,17 @@ Claude Code 的做法更 robust：
 
 Vercel 的实验数据是最好的佐证：**删 80% 工具，准确率从 80% 升到 100%**。少即是多。
 
+### Claude Code vs Cursor vs Aider：工具哲学对比
+
+| 维度 | Claude Code | Cursor |
+|------|------------|--------|
+| 代码搜索 | ripgrep（精确匹配） | 语义搜索 + ripgrep 混合 |
+| 工具数量 | 6 核心 + ToolSearch 按需 | 20+ 全量注入 |
+| 文件编辑 | 精确字符串替换 (Edit) | diff-based apply |
+| 工具发现 | ToolSearch 延迟加载 | 全量注入，无延迟 |
+
+> **Aider：工具极简主义的极端**。Aider 几乎不使用 tool_use API，而是通过 SEARCH/REPLACE 文本块让模型直接输出文件编辑。这代表了另一个极端——如果模型足够聪明，甚至不需要显式工具接口。
+
 ## Why：设计决策与行业上下文
 
 ### Vercel 实验：删 80% 工具，效果反而更好
@@ -939,3 +954,17 @@ claude -p "Read package.json and tell me the project name" --tools "Read"
 ## 推荐阅读
 
 - [Tool Use Patterns: Building Reliable Agent-Tool Interfaces](https://aiagentsblog.com/) — 工具 schema 设计与结果处理
+
+---
+
+## 模拟场景
+
+<!--@include: ./_fragments/sim-s02.md-->
+
+## 可视化
+
+<!--@include: ./_fragments/viz-s02.md-->
+
+## 设计决策
+
+<!--@include: ./_fragments/ann-s02.md-->

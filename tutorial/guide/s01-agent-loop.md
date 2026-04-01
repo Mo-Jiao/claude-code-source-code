@@ -107,6 +107,8 @@ export class QueryEngine {
 
 ### 3. 消息循环：while(true) 的力量
 
+> 这个循环的学术名称是 **ReAct（Reason + Act）模式** [Yao et al., 2022]。ReAct 的核心思想是让模型交替进行推理（Reason）和行动（Act），而非一次性规划所有步骤。Claude Code 的简化在于将 Reason 步骤内化为模型的 thinking block，不需要外部的 "Thought:" prompt 模板。理解 ReAct 有助于将本教程的知识迁移到其他 agent 框架。
+
 真正的 agent 循环藏在 `query.ts` 的 `queryLoop()` 函数中。它是一个 `while(true)` 无限循环，每次迭代执行一个完整的 "思考-行动" 周期：
 
 **源码路径**: `src/query.ts` -- `queryLoop()` 函数
@@ -180,6 +182,8 @@ const [branch, mainBranch, status, log, userName] = await Promise.all([
 
 ### 5. 消息列表：Agent 的记忆
 
+> ⚠️ **构建 Agent 时最容易忽略的问题**：如果不做上下文管理，消息列表随循环不断累积，10 轮工具调用后模型的推理质量将显著下降。这不是理论问题——它是长任务中 agent "失忆"或"变笨"的首要原因。详见 s07 上下文压缩。
+
 整个 agent 循环的状态通过一个 `Message[]` 数组维持。每条消息有明确的类型：
 
 - `user` -- 用户输入或工具执行结果 (`tool_result`)
@@ -203,6 +207,9 @@ while True:
         return response           # 模型回复用户，结束
     
     if response.stop_reason == "tool_use":
+        # ⚠️ 生产环境注意：真实源码中 stop_reason === 'tool_use' 不可靠
+        # （见 query.ts:554 注释），实际通过检查 content blocks 中是否有
+        # tool_use 类型来判断。伪代码这里使用同步 API 简化了这个逻辑。
         for block in response.content:
             if block.type == "tool_use":
                 result = execute_tool(block.name, block.input)
@@ -483,6 +490,10 @@ if __name__ == "__main__":
 
 ## 设计决策
 
+### ReAct vs ReWOO：两种 agent 范式
+
+> **ReAct vs ReWOO**：与 ReAct 的"边想边做"不同，ReWOO（Reasoning Without Observation）[Xu et al., 2023] 主张"先完整规划再批量执行"。Claude Code 的 Plan Mode（详见 s10）正是在 ReAct 框架内引入了 ReWOO 的部分理念——在 Plan Mode 下，模型先规划完整方案，再切换回 Act Mode 批量执行。这种混合策略兼顾了 ReAct 的灵活性和 ReWOO 的规划性。
+
 ### 为什么 CLI 用 React (Ink)？
 
 这是一个看似奇怪的选择 -- 终端程序为什么需要 React？答案是 **流式更新 + 并发状态管理**。
@@ -496,6 +507,10 @@ Agent 的 TUI 需要同时显示：流式输出的文本、工具执行进度、
 这是为了 **IDE 嵌入和自动化**。VS Code 扩展、JetBrains 插件、CI 脚本都需要以编程方式调用 Claude Code。SDK 模式输出结构化的 JSON 流，让这些集成方可以精确解析每个事件。
 
 `QueryEngine` 类的引入正是为了统一两种模式的核心逻辑，避免代码重复。
+
+### Aider 的不同方案：格式约束 vs 工具调用
+
+> **Aider 的不同方案**：Aider 不依赖 API 级的 `tool_use`，而是使用多种 edit format（whole-file、diff、udiff）控制模型如何修改代码。这是同一问题的两种解法：Claude Code 信任模型的 tool_use 能力，Aider 用格式约束提高编辑精度。两者的取舍在于——tool_use 更通用（模型原生支持），edit format 更可控（不依赖模型的工具调用质量）。随着模型 tool_use 能力持续提升，Claude Code 的方案越来越占优。
 
 ### Harness 优势："苦涩教训" 哲学
 
@@ -626,3 +641,13 @@ cat <session-file>.jsonl | jq -r '.type' | sort | uniq -c | sort -rn
 ## 推荐阅读
 
 - [The Unreasonable Effectiveness of an LLM Agent Loop](https://sketch.dev/blog/agent-loop) — 核心循环为什么如此简单却有效
+
+---
+
+## 模拟场景
+
+<!--@include: ./_fragments/sim-s01.md-->
+
+## 设计决策
+
+<!--@include: ./_fragments/ann-s01.md-->

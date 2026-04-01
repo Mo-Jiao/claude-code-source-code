@@ -49,8 +49,8 @@ export function useSimulator(steps: SimulatorStep[]) {
 
   const reset = useCallback(() => {
     clearTimer();
-    setState({ currentIndex: -1, isPlaying: false, speed: state.speed });
-  }, [clearTimer, state.speed]);
+    setState((prev) => ({ currentIndex: -1, isPlaying: false, speed: prev.speed }));
+  }, [clearTimer]);
 
   const setSpeed = useCallback((speed: number) => {
     setState((prev) => ({ ...prev, speed }));

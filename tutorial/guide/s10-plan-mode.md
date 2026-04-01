@@ -99,6 +99,8 @@ context.setAppState(prev => ({
 
 注意这里不是"移除 Edit/Write 工具"，而是"切换权限模式"。工具列表保持不变，但权限系统在 `'plan'` 模式下会拒绝写入操作。这个设计保护了 system prompt 的前缀稳定性。
 
+**auto 模式的特殊交互**：当 `prePlanMode` 是 auto 模式时，退出 plan 需要额外检查自动模式是否仍然有效（`ExitPlanModeV2Tool.ts:323-341`）。auto 模式（`-y` flag）是生产中最常用的模式之一，理解其与 Plan Mode 的交互对 power user 很重要。
+
 ### EnterPlanMode：规划触发条件
 
 EnterPlanMode 的 prompt 定义了何时应该进入计划模式（源码路径：`src/tools/EnterPlanModeTool/prompt.ts`）。它区分了两种用户类型：
@@ -160,6 +162,12 @@ const allowedPromptSchema = z.object({
 ```
 
 这意味着 agent 可以在计划中说"我需要运行测试"和"我需要安装依赖"，用户批准计划的同时也批准了这些操作权限。这避免了实施阶段的反复确认。
+
+**端到端示例**：
+1. Agent 写计划："1. 安装 jsonwebtoken 2. 创建 JWT 中间件 3. 运行测试"
+2. Agent 调用 ExitPlanMode，附带 `allowedPrompts: [{tool: "Bash", prompt: "run tests"}, {tool: "Bash", prompt: "npm install"}]`
+3. 用户批准计划
+4. 实施阶段，Agent 运行 `npm install jsonwebtoken` 时匹配 "npm install" prompt，无需再次确认
 
 ### 计划文件持久化
 
@@ -571,6 +579,10 @@ if __name__ == "__main__":
 
 ## 设计决策
 
+### Plan-and-Execute 的三种实现
+
+学术研究将 P&E 模式分为三种：(1) 固定计划后执行，(2) 动态重规划，(3) 分层规划。Claude Code 的 Plan Mode 属于第一种——一次性规划然后执行。动态重规划则由 agent 在实施中自主完成（不需要显式 Plan Mode）。
+
 ### 为什么不切换工具集？
 
 最直觉的实现是：进入 plan mode 时移除 Edit/Write/Bash 工具，退出时加回来。但 Claude Code 选择了保留工具集、只切换权限模式。原因是 **Prompt Cache**：
@@ -604,9 +616,13 @@ prompt 中也明确说了："If you would use AskUserQuestion to clarify the app
 | 语义权限请求 | allowedPrompts | 无 | 无 |
 | 团队审批 | 支持（mailbox） | 不支持 | 不支持 |
 
+**Goose 的独特设计**：GitHub Goose 的 plan mode 有一个创新——用户批准计划后可选择清空对话历史，只保留计划文本作为新对话起点。这解决了"规划对话占用上下文窗口"的问题，但牺牲了探索过程的上下文。Claude Code 保留完整历史，依赖 compact 管理长度。
+
 ### Interview Phase 实验
 
 Claude Code 还在实验一个更结构化的计划流程——"Interview Phase"。启用后，Plan Mode 的 workflow 指令不在工具 prompt 中，而是通过 attachment 注入更详细的多阶段指引。这是一个正在进行的 A/B 测试，目标是找到计划详细程度和实施效率的最佳平衡点。
+
+`getPewterLedgerVariant()` 背后的实验假设是：**更详细的计划是否能减少实施返工？** Claude Code 团队在测试不同的计划详细程度（p50 ~4906 chars, p90 ~11617 chars）对后续执行质量的影响——这是"规划 token 开销 vs 实施质量"权衡的实证研究。
 
 ## Why：设计决策与行业上下文
 
@@ -622,7 +638,7 @@ Plan Mode 也是"约束悖论"的体现 [R1-7]：通过限制 Agent 只能思考
 
 ## 变化表
 
-与 s08（Memory 系统）相比，本课新增了以下概念：
+与 s09（Skills 系统）相比，本课新增了以下概念：
 
 | 新增概念 | 说明 |
 |---------|------|
@@ -662,3 +678,17 @@ Plan Mode 也是"约束悖论"的体现 [R1-7]：通过限制 Agent 只能思考
 ## 推荐阅读
 
 - [Harness design for long-running application development (Anthropic)](https://www.anthropic.com/engineering/) — 长时运行 Agent 的质量控制
+
+---
+
+## 模拟场景
+
+<!--@include: ./_fragments/sim-s10.md-->
+
+## 可视化
+
+<!--@include: ./_fragments/viz-s10.md-->
+
+## 设计决策
+
+<!--@include: ./_fragments/ann-s10.md-->

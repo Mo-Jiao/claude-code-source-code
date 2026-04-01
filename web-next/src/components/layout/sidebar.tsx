@@ -30,15 +30,15 @@ export function Sidebar() {
               </span>
             </div>
             <ul className="space-y-0.5">
-              {layer.lessons.map((vId) => {
-                const meta = LESSON_META[vId];
-                const href = `/${vId}`;
+              {layer.lessons.map((lessonId) => {
+                const meta = LESSON_META[lessonId];
+                const href = `/${lessonId}`;
                 const isActive =
                   pathname === href ||
                   pathname === `${href}/`;
 
                 return (
-                  <li key={vId}>
+                  <li key={lessonId}>
                     <Link
                       href={href}
                       className={cn(
@@ -48,7 +48,7 @@ export function Sidebar() {
                           : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-300"
                       )}
                     >
-                      <span className="font-mono text-xs">{vId}</span>
+                      <span className="font-mono text-xs">{lessonId}</span>
                       <span className="ml-1.5">{meta?.title}</span>
                     </Link>
                   </li>

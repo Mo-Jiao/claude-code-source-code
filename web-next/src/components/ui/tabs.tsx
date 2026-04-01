@@ -15,10 +15,13 @@ export function Tabs({ tabs, defaultTab, children, className }: TabsProps) {
 
   return (
     <div className={className}>
-      <div className="flex border-b border-zinc-200 dark:border-zinc-700">
+      <div role="tablist" className="flex border-b border-zinc-200 dark:border-zinc-700">
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            role="tab"
+            aria-selected={active === tab.id}
+            aria-controls={`tabpanel-${tab.id}`}
             onClick={() => setActive(tab.id)}
             className={cn(
               "px-4 py-2 text-sm font-medium transition-colors",
@@ -31,7 +34,7 @@ export function Tabs({ tabs, defaultTab, children, className }: TabsProps) {
           </button>
         ))}
       </div>
-      <div className="mt-4">{children(active)}</div>
+      <div role="tabpanel" id={`tabpanel-${active}`} className="mt-4">{children(active)}</div>
     </div>
   );
 }

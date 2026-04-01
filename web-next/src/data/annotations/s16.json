@@ -1,0 +1,75 @@
+{
+  "version": "s16",
+  "decisions": [
+    {
+      "id": "parallel-startup-side-effects",
+      "title": "Parallel Startup Side Effects: MDM + Keychain + Module Import",
+      "description": "The first lines of main.tsx fire MDM subprocess reads and keychain prefetch before the 135ms module import begins. These three independent operations run concurrently — by the time imports finish, the subprocesses are likely complete. If not, explicit await functions block only at the point the results are actually needed. This shaves the full subprocess latency off the critical startup path.",
+      "alternatives": "Sequential startup (load modules, then read MDM, then fetch keychain) adds 200-400ms of avoidable latency. Lazy initialization on first use avoids startup cost but introduces unpredictable latency spikes during the first user interaction.",
+      "zh": {
+        "title": "并行启动副作用：MDM + Keychain + 模块加载",
+        "description": "main.tsx 的前几行在 135ms 模块加载开始前就启动了 MDM 子进程读取和 Keychain 预取。三个独立操作并发执行——模块加载完成时子进程大概率已完成。如未完成，显式 await 函数仅在实际需要结果时阻塞。这将子进程完整延迟从关键启动路径上移除。"
+      },
+      "ja": {
+        "title": "並列起動サイドエフェクト：MDM + Keychain + モジュールインポート",
+        "description": "main.tsx の最初の数行で 135ms のモジュールインポート開始前に MDM サブプロセス読み取りと Keychain プリフェッチを起動する。3 つの独立操作が並行実行され、インポート完了時にはサブプロセスはほぼ完了している。未完了の場合は結果が必要な時点でのみブロックする。"
+      }
+    },
+    {
+      "id": "hot-cold-path-separation",
+      "title": "Hot Path vs Cold Path: Optimize the Agent Loop, Not the Exceptions",
+      "description": "The agent loop (callModel -> stream -> tool execution -> append message) runs on every turn and is the hot path — prompt cache hit rate and streaming latency matter here. Auto-compact, skill matching, and memory retrieval are cold paths that trigger only under specific conditions. Performance optimization effort is directed at the hot path; cold path operations like compact can be expensive but infrequent without hurting overall experience.",
+      "alternatives": "Treating all code paths equally leads to premature optimization of rarely-executed code. Optimizing only cold paths (e.g., making compact faster) has minimal user impact since it rarely runs. Ignoring the hot path distinction makes it hard to prioritize engineering effort.",
+      "zh": {
+        "title": "热路径 vs 冷路径：优化 Agent 循环而非异常分支",
+        "description": "Agent 循环（callModel → 流式接收 → 工具执行 → 追加消息）每轮都执行，是热路径——Prompt Cache 命中率和流式延迟在此至关重要。Auto-compact、Skill 匹配和 Memory 检索是冷路径，仅在特定条件下触发。性能优化聚焦热路径；冷路径操作如 compact 可以较慢但不影响整体体验。"
+      },
+      "ja": {
+        "title": "ホットパス vs コールドパス：例外ではなくエージェントループを最適化",
+        "description": "エージェントループ（callModel → ストリーム → ツール実行 → メッセージ追加）は毎ターン実行されるホットパスであり、Prompt Cache ヒット率とストリーミング遅延が重要。Auto-compact・Skill マッチ・Memory 検索は特定条件でのみ発火するコールドパス。最適化はホットパスに集中し、コールドパスは低頻度なので多少遅くても問題ない。"
+      }
+    },
+    {
+      "id": "layered-prompt-cache-strategy",
+      "title": "Layered System Prompt for Near-100% Cache Hit Rate",
+      "description": "The six-layer system prompt places stable content (environment, tool descriptions, role) before dynamic content (CLAUDE.md, memory, conditional rules). Cache breakpoints are set after the stable layers, so the top ~80% of tokens almost always hit the prompt cache. This reduces input token cost by ~7x over 20 conversation turns compared to no caching. The layering is not just content organization — it is a cache optimization strategy.",
+      "alternatives": "A flat system prompt invalidates the entire cache whenever any part changes (CLAUDE.md edit, tool list update). Putting dynamic content first would still break the cache on every change. No caching at all means linear cost growth with conversation length.",
+      "zh": {
+        "title": "分层系统提示词实现接近 100% 的缓存命中率",
+        "description": "六层系统提示词将稳定内容（环境、工具描述、角色）放在动态内容（CLAUDE.md、记忆、条件规则）之前。缓存断点设在稳定层之后，使前约 80% 的 token 几乎总是命中 Prompt Cache。与无缓存相比，20 轮对话中输入 token 成本降低约 7 倍。分层不仅是内容组织——更是缓存优化策略。"
+      },
+      "ja": {
+        "title": "階層型システムプロンプトでほぼ 100% のキャッシュヒット率",
+        "description": "6 層システムプロンプトは安定コンテンツ（環境・ツール記述・ロール）を動的コンテンツ（CLAUDE.md・メモリ・条件ルール）の前に配置する。キャッシュブレークポイントを安定層の後に設定し、上位約 80% のトークンがほぼ常にキャッシュヒットする。20 ターンの会話でキャッシュなし比約 7 倍のコスト削減。"
+      }
+    },
+    {
+      "id": "active-reasoning-over-rag",
+      "title": "Active Reasoning (Tool Calls) Instead of Passive Retrieval (RAG)",
+      "description": "Claude Code has no vector database, no embedding index, no RAG pipeline. Search capabilities are exposed as tools (Grep, Glob, Read), letting the model decide when to search, what to search for, and how to combine results. This enables multi-hop search strategies and mid-course corrections that single-shot RAG retrieval cannot achieve. The cost is more API calls; the benefit is significantly higher result quality for complex queries.",
+      "alternatives": "RAG (embedding-based retrieval + generation) is cheaper per query but limited to single-hop search with no ability to refine strategy based on intermediate results. A hybrid approach combining RAG for initial retrieval with tool-based follow-up adds complexity. Pure RAG fails at multi-hop reasoning like 'when was this bug introduced?'.",
+      "zh": {
+        "title": "主动推理（工具调用）而非被动检索（RAG）",
+        "description": "Claude Code 没有向量数据库、没有 embedding 索引、没有 RAG 管道。搜索能力作为工具暴露（Grep、Glob、Read），让模型自己决定何时搜索、搜什么、如何组合结果。这支持多跳搜索策略和基于中间结果的调整——单次 RAG 检索无法做到。代价是更多 API 调用，收益是复杂查询下显著更高的结果质量。"
+      },
+      "ja": {
+        "title": "受動的検索（RAG）ではなく能動的推論（ツール呼び出し）",
+        "description": "Claude Code にはベクトルDB・embeddingインデックス・RAGパイプラインがない。検索能力はツール（Grep・Glob・Read）として公開し、モデルが検索タイミング・対象・結果の組み合わせを自ら判断する。マルチホップ検索と中間結果に基づく戦略修正が可能になり、単発 RAG 検索では到達できない品質を実現する。"
+      }
+    },
+    {
+      "id": "bitter-lesson-scaffold-deletion",
+      "title": "Bitter Lesson Philosophy: Delete Scaffolding as Models Improve",
+      "description": "Claude Code has no AST parser, no RAG pipeline, no syntax checker, no code templates — the model handles all of these through its native capabilities and basic tools. Each time a new model is released, the team reviews and deletes scaffolding code that was compensating for previous model limitations. This is the opposite of most agent frameworks that continuously add engineering components. The bet is that models will keep improving, and a clean tool interface plus excellent harness will outlast any custom workaround.",
+      "alternatives": "Building specialized components (AST parser, RAG, linters) provides immediate accuracy gains but creates maintenance burden and may become obsolete when the next model handles those tasks natively. The risk of the bitter lesson approach is underperformance with current models while waiting for future improvements.",
+      "zh": {
+        "title": "苦涩教训哲学：模型进步时删除脚手架",
+        "description": "Claude Code 没有 AST 解析器、没有 RAG 管道、没有语法检查器、没有代码模板——模型通过原生能力和基础工具处理所有这些。每次新模型发布，团队审查并删除为弥补旧模型不足而添加的脚手架代码。这与大多数不断添加工程组件的 agent 框架方向相反。赌注是：模型会持续进步，干净的工具接口加优秀的 harness 会比任何定制方案更持久。"
+      },
+      "ja": {
+        "title": "苦い教訓の哲学：モデル改善時にスキャフォールディングを削除",
+        "description": "Claude Code には AST パーサー・RAG パイプライン・構文チェッカー・コードテンプレートがない。モデルがネイティブ能力と基本ツールですべてを処理する。新モデルリリースごとに、旧モデルの不足を補うスキャフォールドコードを見直し削除する。ほとんどのエージェントフレームワークが工学コンポーネントを追加し続けるのとは逆の方向。"
+      }
+    }
+  ]
+}

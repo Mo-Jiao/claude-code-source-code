@@ -10,6 +10,12 @@ AI Agent 的核心运行机制：`while(true) { call_model() → check stop_reas
 ### A2A (Agent-to-Agent Protocol)
 Google 提出的 Agent 间通信协议，解决 Agent → Agent 的水平协作。与 MCP（Agent → 工具的垂直集成）互补。
 
+### ACP (Agent Communication Protocol)
+BeeAI/IBM 提出的企业级 Agent 互操作协议，面向企业内部多 Agent 系统的可发现性和协作。与 A2A 定位互补，ACP 侧重企业级治理。
+
+### AGENTS.md
+跨工具通用的 Agent 配置标准，类似 Claude Code 的 CLAUDE.md 但面向整个行业。旨在让同一份配置文件能被不同 AI 编码工具识别和使用。
+
 ### AsyncGenerator (异步生成器)
 Python/TypeScript 的流式数据模式，Claude Code 用它实现从 API 到 UI 的全链路流式传输，调用方用 `async for` 逐条消费结果。
 
@@ -17,6 +23,12 @@ Python/TypeScript 的流式数据模式，Claude Code 用它实现从 API 到 UI
 
 ### Cache Hit (缓存命中)
 API 请求的前缀与之前的请求匹配时，服务端复用已有计算结果，减少 token 成本。Claude Code 通过精心设计 system prompt 顺序实现 90%+ 命中率。参见 [s03](../guide/s03-system-prompt)。
+
+### Context Collapse
+实验性上下文管理机制，替代传统的三层压缩（micro / auto / manual）。通过更激进的策略管理上下文窗口空间。
+
+### Context Rot (上下文腐烂)
+上下文窗口中信息逐渐退化的现象，包含四种类型：Amnesia（遗忘）、Dilution（稀释）、Overflow（溢出）、Contamination（污染）。是 Agent 长对话中的核心挑战。
 
 ### Compact (上下文压缩)
 对话过长时，用 LLM 将旧消息摘要为简短总结，腾出上下文窗口空间。Claude Code 有三层压缩：micro / auto / manual。参见 [s07](../guide/s07-compact)。
@@ -37,6 +49,11 @@ Dead Code Elimination，编译优化技术。Bun 的 `feature()` 函数在编译
 
 ### Deny-by-default (默认拒绝)
 安全设计原则：在没有明确允许规则时，默认拒绝操作。与 "fail-open"（默认允许）相反。Claude Code 的权限系统采用此原则。参见 [s04](../guide/s04-permissions)。
+
+## E
+
+### Extract Memories (提取记忆)
+对话结束后自动运行的后台代理，从对话历史中提取值得跨会话保存的记忆（用户偏好、项目约定等），写入记忆文件供后续会话使用。
 
 ## F
 
@@ -81,6 +98,9 @@ Claude Code 的第一层压缩：零 API 成本，直接截断过长的工具结
 
 ## P
 
+### PewterLedger
+Plan Mode 中测试计划详细程度影响的 A/B 实验。实验发现：提供过于详细的计划反而降低 Agent 的自主决策能力，验证了"给方向不给步骤"的 Agent 设计原则。
+
 ### Path Traversal (路径穿越)
 安全攻击：通过构造含 `../` 的文件路径访问预期目录之外的文件。Claude Code 的 Worktree slug 验证防御此攻击。
 
@@ -91,6 +111,14 @@ Anthropic API 的缓存机制：如果请求的 system prompt 前缀与之前的
 
 ### QueryEngine
 Claude Code 的核心引擎类，封装了 Agent 循环的完整逻辑。REPL（交互模式）和 SDK（编程模式）共享同一个 QueryEngine。参见 [s01](../guide/s01-agent-loop)。
+
+## R
+
+### ReAct (Reason + Act)
+Yao et al. 2022 提出的 Agent 循环模式：模型交替进行推理（Reason）和行动（Act），每步行动后观察结果再推理下一步。Claude Code 的 Agent Loop 本质上是 ReAct 模式的工程实现。
+
+### ReWOO (Reasoning Without Observation)
+先完整规划再批量执行的 Agent 模式，与 ReAct 的逐步交替不同。减少 LLM 调用次数但牺牲了根据中间结果调整计划的灵活性。
 
 ## S
 
@@ -115,4 +143,4 @@ LLM 处理文本的基本单位，大约每个英文单词 1-1.5 个 token，每
 LLM 不直接执行操作，而是输出结构化的工具调用请求（工具名 + 参数），由 Harness 执行后将结果返回给模型。这是 Agent 与世界交互的核心机制。
 
 ### ToxicSkills
-Snyk 发现的针对 Agent Skills 的供应链攻击：恶意 Skill 文件中嵌入有害 prompt injection payload，安装后在 Agent 运行时被注入。
+Snyk 发现的 335 个恶意 Skills 供应链攻击：恶意 Skill 文件中嵌入有害 prompt injection payload，安装后在 Agent 运行时被注入。

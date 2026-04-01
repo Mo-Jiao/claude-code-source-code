@@ -1,0 +1,75 @@
+{
+  "version": "s15",
+  "decisions": [
+    {
+      "id": "standardized-protocol-over-direct-integration",
+      "title": "MCP Standard Protocol Instead of Direct Tool Integration",
+      "description": "Claude Code uses the Model Context Protocol (MCP) as a standardized interface for external tools rather than adding each integration directly into the codebase. An MCP server written once works across Claude Code, Cursor, Zed, and Windsurf. The protocol provides service discovery, security boundaries (separate process), and flexible deployment (local stdio or remote HTTP). The trade-off is protocol overhead vs. ecosystem leverage.",
+      "alternatives": "Direct in-codebase tool integration gives maximum performance and deep integration but requires a new release for every tool addition. A custom plugin protocol avoids the per-release problem but fragments the ecosystem. Raw function calling has no discovery or registration mechanism.",
+      "zh": {
+        "title": "MCP 标准协议而非直接工具集成",
+        "description": "Claude Code 使用 MCP（Model Context Protocol）作为外部工具的标准化接口，而非将每个集成直接写入代码库。一个 MCP 服务器编写一次即可在 Claude Code、Cursor、Zed、Windsurf 中使用。协议提供服务发现、安全边界（独立进程）和灵活部署（本地 stdio 或远程 HTTP）。代价是协议开销，收益是生态效应。"
+      },
+      "ja": {
+        "title": "直接統合ではなく MCP 標準プロトコル",
+        "description": "Claude Code は外部ツールのインターフェースとして MCP（Model Context Protocol）標準を採用し、各統合をコードベースに直接追加しない。MCP サーバーは一度書けば Claude Code・Cursor・Zed・Windsurf で利用できる。プロトコルはサービス発見、セキュリティ境界（別プロセス）、柔軟なデプロイ（ローカル stdio またはリモート HTTP）を提供する。"
+      }
+    },
+    {
+      "id": "namespaced-tool-mapping",
+      "title": "Double-Underscore Namespaced Tool Names: mcp__{server}__{tool}",
+      "description": "MCP tools are mapped to Claude Code's internal tool format using the naming convention `mcp__{server}__{tool}`. Server and tool names are normalized (special characters replaced with underscores) to ensure valid identifiers. This prevents name collisions between tools from different servers and makes tool origin traceable. The double underscore is a known limitation — server names cannot contain `__`.",
+      "alternatives": "Flat tool names without namespacing risk collisions when two MCP servers expose tools with the same name. Using a registry-based approach adds complexity. Prefixing with the server URL would be unique but creates unwieldy tool names.",
+      "zh": {
+        "title": "双下划线命名空间工具名：mcp__{server}__{tool}",
+        "description": "MCP 工具使用 `mcp__{server}__{tool}` 命名约定映射为 Claude Code 内部工具格式。服务器名和工具名经过归一化（特殊字符替换为下划线）以确保合法标识符。这防止了不同服务器工具间的名称冲突，并使工具来源可追溯。双下划线是已知限制——服务器名不能包含 `__`。"
+      },
+      "ja": {
+        "title": "二重アンダースコアによる名前空間ツール名：mcp__{server}__{tool}",
+        "description": "MCP ツールは `mcp__{server}__{tool}` の命名規則で Claude Code 内部ツール形式にマッピングされる。サーバー名とツール名は正規化（特殊文字をアンダースコアに置換）され、異なるサーバー間のツール名衝突を防ぎ、出所を追跡可能にする。"
+      }
+    },
+    {
+      "id": "lazy-loading-mcp-tools",
+      "title": "Lazy Loading via alwaysLoad and searchHint Annotations",
+      "description": "Large MCP servers may expose 50-200 tools. Loading all tool schemas into the context window wastes tokens. Tools marked with `_meta['anthropic/alwaysLoad']` are loaded immediately; others are discoverable via ToolSearch using `_meta['anthropic/searchHint']`. This keeps the context window lean while preserving access to the full tool catalog on demand.",
+      "alternatives": "Loading all tools eagerly wastes context tokens and reduces prompt cache hit rate. Loading none requires the model to guess tool names. A middle ground of loading the top-N tools by frequency requires usage analytics infrastructure.",
+      "zh": {
+        "title": "通过 alwaysLoad 和 searchHint 注解实现延迟加载",
+        "description": "大型 MCP 服务器可能暴露 50-200 个工具。全部加载 schema 到上下文窗口浪费 token。标记 `_meta['anthropic/alwaysLoad']` 的工具立即加载，其余通过 `_meta['anthropic/searchHint']` 经 ToolSearch 按需发现。这保持上下文窗口精简的同时保留对完整工具目录的按需访问。"
+      },
+      "ja": {
+        "title": "alwaysLoad と searchHint アノテーションによる遅延読み込み",
+        "description": "大規模 MCP サーバーは 50〜200 のツールを公開する可能性がある。全スキーマをコンテキストに読み込むとトークンの浪費になる。`_meta['anthropic/alwaysLoad']` 付きツールは即時読み込み、その他は `_meta['anthropic/searchHint']` を使った ToolSearch で必要時に発見する。"
+      }
+    },
+    {
+      "id": "enterprise-exclusive-mcp-config",
+      "title": "Enterprise MCP Config Is Exclusive: Overrides All Other Sources",
+      "description": "When `managed-mcp.json` exists, all other MCP configuration sources (user, project, local, plugin, claude.ai) are completely ignored. This gives enterprise IT administrators absolute control over which MCP servers employees can use. Combined with allowedMcpServers/deniedMcpServers policy filters (deny always wins), this provides a complete security boundary for regulated environments.",
+      "alternatives": "Merging enterprise config with other sources preserves user flexibility but weakens IT control. A per-server override model is more granular but harder to audit. No enterprise control at all blocks adoption in regulated industries.",
+      "zh": {
+        "title": "企业 MCP 配置是排他的：覆盖所有其他来源",
+        "description": "当 `managed-mcp.json` 存在时，所有其他 MCP 配置来源（用户、项目、本地、插件、claude.ai）被完全忽略。这给企业 IT 管理员提供了对员工可用 MCP 服务器的绝对控制。结合 allowedMcpServers/deniedMcpServers 策略过滤（拒绝始终优先），为受监管环境提供完整的安全边界。"
+      },
+      "ja": {
+        "title": "企業 MCP 設定は排他的：他のすべてのソースを上書き",
+        "description": "`managed-mcp.json` が存在すると、他のすべての MCP 設定ソース（ユーザー・プロジェクト・ローカル・プラグイン・claude.ai）は完全に無視される。企業 IT 管理者が従業員の利用可能な MCP サーバーを完全に制御でき、allowedMcpServers/deniedMcpServers ポリシーフィルター（拒否が常に優先）と合わせて規制環境向けの完全なセキュリティ境界を提供する。"
+      }
+    },
+    {
+      "id": "mcp-connection-concurrency-tiers",
+      "title": "Tiered Connection Concurrency: 3 Local, 20 Remote",
+      "description": "Local MCP servers (stdio) are limited to 3 concurrent connections because each spawns a subprocess. Remote servers (http/sse) allow 20 concurrent connections since they are just HTTP requests. This practical split accommodates the typical developer setup (1-5 local servers) while supporting cloud connector scenarios (30+ remote servers) without blocking startup.",
+      "alternatives": "A single concurrency limit forces either too few remote connections (slow startup with many cloud connectors) or too many local subprocesses (resource exhaustion). Unlimited concurrency risks fork-bombing on machines with many stdio servers configured.",
+      "zh": {
+        "title": "分级连接并发：本地 3，远程 20",
+        "description": "本地 MCP 服务器（stdio）限制 3 个并发连接，因为每个都需要 spawn 子进程。远程服务器（http/sse）允许 20 个并发，因为只是 HTTP 请求。这种实际划分适配了典型开发者配置（1-5 个本地服务器）同时支持云连接器场景（30+ 个远程服务器），不阻塞启动。"
+      },
+      "ja": {
+        "title": "階層型接続並行性：ローカル 3、リモート 20",
+        "description": "ローカル MCP サーバー（stdio）はサブプロセス生成のため並行 3 に制限し、リモートサーバー（http/sse）は HTTP リクエストなので並行 20 を許容する。一般的な開発者構成（ローカル 1〜5）とクラウドコネクタシナリオ（リモート 30+）の両方に対応し、起動をブロックしない。"
+      }
+    }
+  ]
+}

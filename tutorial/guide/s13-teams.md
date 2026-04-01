@@ -155,6 +155,14 @@ AgentTool({
 - **iTerm2**：利用 iTerm2 的原生标签页
 - **in-process**：在同一进程内运行（轻量，共享终端）
 
+**后端选择指南**：
+
+| 场景 | 推荐后端 | 原因 |
+|------|---------|------|
+| I/O 密集（API 调用、文件读写） | In-process | 无 IPC 开销 |
+| CPU 密集或需要完全隔离 | Tmux | 独立进程，不阻塞主事件循环 |
+| 需要可视化调试 | Tmux | 可 attach 查看实时输出 |
+
 真实路径：`src/tools/AgentTool/AgentTool.tsx`（`spawnTeammate` 调用）
 
 ### 消息传递：SendMessageTool
@@ -875,6 +883,11 @@ def example_team_workflow():
 | 成员颜色管理 | `src/utils/swarm/teammateLayoutManager.ts` | 成员颜色分配 |
 | 任务管理 | `src/utils/tasks.ts` | TaskList 创建/重置/Leader 注册 |
 | In-Process 任务 | `src/tasks/InProcessTeammateTask/` | 进程内 teammate 运行 |
+| In-Process 运行器 | `src/utils/swarm/inProcessRunner.ts` | 进程内 teammate 执行循环 |
+| In-Process 派发 | `src/utils/swarm/spawnInProcess.ts` | 进程内 teammate 创建 |
+| 权限同步 | `src/utils/swarm/permissionSync.ts` | Leader↔Teammate 权限同步 |
+| Leader 权限桥接 | `src/utils/swarm/leaderPermissionBridge.ts` | Leader 侧权限代理 |
+| Teammate 初始化 | `src/utils/swarm/teammateInit.ts` | Teammate 启动初始化流程 |
 | Swarm 开关 | `src/utils/agentSwarmsEnabled.ts` | feature gate 检查 |
 
 ## 设计决策
@@ -902,8 +915,10 @@ IDLE 表示"我完成了当前任务，等待新指令"。只有显式的 `shutd
 |------|---------------|
 | Claude Code | TeamFile + Mailbox + 结构化协议 |
 | CrewAI | Role-based agents + sequential/hierarchical flow |
-| AutoGen | 对话式 multi-agent（shared conversation） |
+| AutoGen | 对话式 multi-agent（shared conversation）；v0.4 转向事件驱动架构 |
 | LangGraph | 图式 workflow，节点=agent |
+| Google ADK | A2A 协议原生支持，agent 间发现与委托 |
+| OpenAI Agents SDK | Handoff 模式，agent 间显式移交控制权 |
 
 Claude Code 的方案更接近"微服务"模型——每个 agent 是独立进程，通过消息通信，有明确的生命周期管理。比 CrewAI 的角色流更灵活，比 AutoGen 的共享对话更隔离。
 
@@ -963,3 +978,13 @@ AgileSoftLabs（AI 服务供应商）的博客报告称，部署多 Agent 架构
 
 - [Multi-agent patterns (Microsoft)](https://learn.microsoft.com/) — 微软的多 Agent 编排模式
 - [MCP Orchestrator: Spawning parallel sub-agents](https://reddit.com/) — 社区的 MCP 多 Agent 编排方案
+
+---
+
+## 模拟场景
+
+<!--@include: ./_fragments/sim-s13.md-->
+
+## 设计决策
+
+<!--@include: ./_fragments/ann-s13.md-->

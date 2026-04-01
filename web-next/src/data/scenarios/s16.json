@@ -1,0 +1,64 @@
+{
+  "version": "s16",
+  "title": "架构全景",
+  "description": "Claude Code 从启动到完成一次查询的完整生命周期：引导链、系统 Prompt 组装、API 调用",
+  "steps": [
+    {
+      "type": "user_message",
+      "content": "用户在终端输入: claude \"解释这个项目的架构\"",
+      "annotation": "这是 Claude Code 的入口点。一条简单的命令触发完整的引导链"
+    },
+    {
+      "type": "system_event",
+      "content": "Bootstrap 序列启动:\n1. 解析 CLI 参数（query, flags, model）\n2. 加载配置: ~/.claude/settings.json\n3. 检测项目根目录（git root）\n4. 加载权限配置: allowedTools, blockedTools",
+      "annotation": "引导链第一阶段：环境感知。从 CLI 参数、用户配置、项目配置三层收集信息"
+    },
+    {
+      "type": "system_event",
+      "content": "并行预取（Parallel Prefetch）:\n同时启动以下操作，不阻塞主流程:\n- Git 状态: branch, recent commits, dirty files\n- CLAUDE.md 加载: 全局 → 项目 → 本地\n- MCP 服务器连接: 启动已配置的 MCP 进程\n- 模型预热: 建立 API 连接",
+      "annotation": "并行预取是关键性能优化：4 个独立 I/O 操作同时执行，将冷启动时间从串行的 ~2s 压缩到 ~500ms"
+    },
+    {
+      "type": "system_event",
+      "content": "System Prompt 组装:\n┌─ 基础指令（角色、安全规则）\n├─ 工具定义（内置 + MCP 工具 schema）\n├─ 环境信息（OS, shell, CWD, git status）\n├─ CLAUDE.md 内容（三层合并）\n└─ System Reminder（权限、可用 Skills）\n\n总 token 数: ~4,200",
+      "annotation": "System Prompt 分为静态段和动态段。静态段命中 prompt 缓存，动态段按需注入。分段设计直接影响 API 成本"
+    },
+    {
+      "type": "system_event",
+      "content": "Fast-Path 检测:\n- 输入: \"解释这个项目的架构\"\n- 检查: 是否为 bash 单命令？→ 否\n- 检查: 是否命中快捷路由？→ 否\n- 结果: 走标准 Agent 循环",
+      "annotation": "Fast-Path 为简单命令提供捷径（如 'claude \"ls\"' 直接执行）。复杂查询走标准循环，保证完整的推理能力"
+    },
+    {
+      "type": "system_event",
+      "content": "API 调用构建:\n{\n  model: \"claude-sonnet-4-20250514\",\n  max_tokens: 16384,\n  system: [系统 prompt 段落...],\n  messages: [{role: \"user\", content: \"解释这个项目的架构\"}],\n  tools: [Read, Glob, Grep, Bash, Edit, ...],\n  stream: true\n}",
+      "annotation": "请求以流式模式发送。工具定义包含完整的 JSON Schema，模型据此生成合法的工具调用参数"
+    },
+    {
+      "type": "tool_call",
+      "content": "Agent 首次推理决定先了解项目结构:\nGlob: **/*.{ts,js,json}\n\n返回 47 个文件路径",
+      "toolName": "Glob",
+      "annotation": "Agent 循环第一步：收集信息。Glob 比 find 更快且不会挂起，这是内置工具设计的考量"
+    },
+    {
+      "type": "tool_call",
+      "content": "读取关键文件:\n- package.json（依赖和脚本）\n- src/index.ts（入口点）\n- tsconfig.json（编译配置）",
+      "toolName": "Read",
+      "annotation": "Agent 循环第二步：深入分析。每次工具调用都是一轮 API 请求，工具结果作为新消息追加到上下文"
+    },
+    {
+      "type": "system_event",
+      "content": "Agent 循环追踪:\nTurn 1: Glob（结构概览）→ 47 files\nTurn 2: Read × 3（关键文件）→ 内容\nTurn 3: Grep（模式搜索）→ 依赖关系\nTurn 4: 生成最终回复\n\n共 4 轮 API 调用，总 token: ~12,000",
+      "annotation": "每轮循环: 发送上下文 → 模型推理 → 工具调用 → 结果追加 → 重复。Token 随轮次累积，这就是上下文管理至关重要的原因"
+    },
+    {
+      "type": "assistant_text",
+      "content": "这是一个 TypeScript monorepo 项目，核心架构分为三层：\n- CLI 层: 命令解析和用户交互\n- Agent 层: 工具循环和上下文管理\n- API 层: 模型调用和流式响应处理\n\n入口点是 src/index.ts，通过 Commander.js 分发子命令...",
+      "annotation": "最终回复通过流式传输逐字输出到终端。整个过程从启动到回复完成约 8-15 秒"
+    },
+    {
+      "type": "system_event",
+      "content": "请求完成:\n- 总耗时: 11.2s（引导 0.5s + 4 轮 API 10.7s）\n- 输入 token: 8,420（其中 prompt 缓存命中 4,200）\n- 输出 token: 3,580\n- 工具调用: 5 次\n- 会话已保存，可用 claude --continue 继续",
+      "annotation": "prompt 缓存命中率约 50%：系统 prompt 的静态部分被缓存，显著降低后续请求的延迟和成本"
+    }
+  ]
+}

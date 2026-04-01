@@ -6,7 +6,7 @@
 
 ::: info Key Takeaways
 - **完整上下文隔离** — 子 Agent 获得全新 messages[]，不继承父 Agent 的对话历史
-- **四种 Agent 类型** — Explore (只读) / general-purpose (全能力) / Plan (规划) / 自定义 (.claude/agents/*.md)
+- **六种 Agent 类型** — Explore (只读) / general-purpose (全能力) / Plan (规划) / claude-code-guide (使用指南) / verification (验证专家) / 自定义 (.claude/agents/*.md)
 - **工具白名单/黑名单** — 每种 Agent 类型有不同的工具集限制
 - **Context Engineering = Isolate** — 子 Agent 是"给子任务独立上下文空间"的核心实现
 :::
@@ -58,7 +58,7 @@ flowchart LR
         E["Explore
         只读搜索
         禁止写文件
-        model: haiku"]
+        model: ant?inherit:haiku"]
         G["general-purpose
         通用全能
         tools: ['*']
@@ -67,6 +67,12 @@ flowchart LR
         架构规划
         只读+分析
         model: inherit"]
+        CCG["claude-code-guide
+        使用指南
+        回答产品问题"]
+        V["verification
+        验证专家
+        尝试打破实现"]
         F["Fork
         上下文继承
         tools: 父 agent 全集
@@ -109,16 +115,19 @@ const agentToolUseContext = createSubagentContext(toolUseContext, {
 
 ### Agent 类型体系
 
-Claude Code 定义了四种内置 agent 类型，每种针对不同场景优化：
+Claude Code 定义了六种内置 agent 类型，每种针对不同场景优化：
 
-**Explore（探索型）**——只读搜索专家。禁止所有文件写入工具（`FileEdit`、`FileWrite`、`NotebookEdit`），也禁止嵌套派发子 agent。使用 Haiku 模型以降低成本和延迟。特殊优化：`omitClaudeMd: true` 不注入 CLAUDE.md 规则（只读 agent 不需要提交规范）。
+**Explore（探索型）**——只读搜索专家。禁止所有文件写入工具（`FileEdit`、`FileWrite`、`NotebookEdit`），也禁止嵌套派发子 agent。特殊优化：`omitClaudeMd: true` 不注入 CLAUDE.md 规则（只读 agent 不需要提交规范）。
+
+Explore Agent 的模型选择：`process.env.USER_TYPE === 'ant' ? 'inherit' : 'haiku'`——Anthropic 内部员工使用继承模型（更强），外部用户使用 Haiku。这是 Claude Code 内外差异化策略的典型案例。
 
 ```typescript
 // built-in/exploreAgent.ts
 export const EXPLORE_AGENT: BuiltInAgentDefinition = {
   agentType: 'Explore',
   disallowedTools: [AGENT_TOOL_NAME, FILE_EDIT_TOOL_NAME, FILE_WRITE_TOOL_NAME, ...],
-  model: 'haiku',
+  // Ants get inherit to use the main agent's model; external users get haiku for speed
+  model: process.env.USER_TYPE === 'ant' ? 'inherit' : 'haiku',
   omitClaudeMd: true,
   // ...
 }
@@ -128,7 +137,13 @@ export const EXPLORE_AGENT: BuiltInAgentDefinition = {
 
 **Plan（规划型）**——软件架构专家，只读模式。与 Explore 共享工具限制，但使用 `model: 'inherit'` 继承父 agent 模型以获得更强推理能力。输出结构化的实现计划。
 
+**claude-code-guide（使用指南型）**——当用户询问 Claude Code 功能、Claude Agent SDK 或 Claude API 使用方法时自动派发。专门回答"Can Claude..."、"How do I..."类问题，避免主 agent 处理产品文档查询。
+
+**verification（验证型）**——验证专家，专门尝试"打破"实现。其 system prompt 明确要求不能只读代码就判定通过——必须实际运行命令验证。设计哲学是"前 80% 是容易的部分，你的全部价值在于发现最后 20%"。测试套件结果只是上下文，不是证据。
+
 **Fork（分叉型）**——实验性功能。不是独立的 agent 类型，而是"分叉自己"。继承父 agent 的完整对话上下文和 system prompt，使用 `tools: ['*']` 和 `permissionMode: 'bubble'`。设计目标是**最大化 prompt cache 命中**——所有 fork 子 agent 共享相同的 API 请求前缀。
+
+**Cache 命中的成本影响**：Prompt cache 命中成本是完整处理的 1/10。对于 50K token 的 system prompt，fork 子 agent 每次调用可节省约 $0.15（Opus）或 $0.015（Sonnet）。没有 cache 命中，多 agent 并行的 API 成本会翻倍——Fork 不是设计品味，而是成本工程。
 
 真实路径：`src/tools/AgentTool/built-in/`
 
@@ -189,6 +204,8 @@ export function isInForkChild(messages: MessageType[]): boolean {
 ```
 
 如果检测到当前已经在 fork 子 agent 中，拒绝再次 fork。
+
+**maxTurns 保护**：子 agent 默认 200 轮上限。即使没有递归，一个"死循环"的 agent 也会在 200 轮后强制停止。这是防止成本失控的最后一道防线，与工具限制互补。
 
 真实路径：`src/tools/AgentTool/forkSubagent.ts`
 
@@ -585,6 +602,8 @@ def execute_tool(tool_use: dict, ctx: SubagentContext) -> dict:
 | Explore agent | `src/tools/AgentTool/built-in/exploreAgent.ts` | 只读搜索专家定义 |
 | general-purpose agent | `src/tools/AgentTool/built-in/generalPurposeAgent.ts` | 通用全能 agent 定义 |
 | Plan agent | `src/tools/AgentTool/built-in/planAgent.ts` | 架构规划 agent 定义 |
+| claude-code-guide agent | `src/tools/AgentTool/built-in/claudeCodeGuideAgent.ts` | 产品使用指南 agent 定义 |
+| verification agent | `src/tools/AgentTool/built-in/verificationAgent.ts` | 验证专家 agent 定义 |
 | 自定义 agent 加载 | `src/tools/AgentTool/loadAgentsDir.ts` | 解析 .claude/agents/*.md 文件 |
 | Agent prompt | `src/tools/AgentTool/prompt.ts` | Agent 工具描述、使用示例 |
 | Agent 工具解析 | `src/tools/AgentTool/agentToolUtils.ts` | 工具集解析、结果 schema |
@@ -608,9 +627,11 @@ Claude Code 选择**极端的隔离策略**——子 agent 的完整对话被丢
 | 系统 | 子任务上下文策略 |
 |------|---------------|
 | Claude Code | 子 agent 独立 messages[]，只返回摘要 |
-| Cursor | 内联工具调用，无子 agent 隔离 |
+| Cursor | 内联工具调用，无子 agent 隔离；Background Agents（2026）远程沙箱独立运行 |
 | Devin | 持久化子任务上下文到外部存储 |
 | AutoGPT | 递归子 agent，共享部分上下文 |
+| GitHub Copilot | Agent Mode + Coding Agent 后台 PR |
+| Gemini CLI | 支持 sub-agent，共享 session context |
 
 Claude Code 的方案是最激进的隔离——代价是子 agent 无法访问父 agent 的上下文（fork 模式除外），好处是上下文永远干净。
 
@@ -660,3 +681,13 @@ Claude Code 按能力将 Agent 分为只读型（Explore）、全能型（genera
 ## 推荐阅读
 
 - [Reverse-Engineering Claude Code Sub Agents (sabrina.dev)](https://sabrina.dev/) — 社区对子 Agent 机制的逆向分析
+
+---
+
+## 模拟场景
+
+<!--@include: ./_fragments/sim-s12.md-->
+
+## 设计决策
+
+<!--@include: ./_fragments/ann-s12.md-->

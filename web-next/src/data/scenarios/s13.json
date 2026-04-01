@@ -1,0 +1,70 @@
+{
+  "version": "s13",
+  "title": "团队协作",
+  "description": "父 Agent 创建团队，多个子 Agent 通过任务 DAG 协作完成复杂项目",
+  "steps": [
+    {
+      "type": "user_message",
+      "content": "帮我实现一个完整的用户注册功能，包括前端表单、后端 API 和数据库迁移",
+      "annotation": "任务涉及前端、后端、数据库三个独立模块，天然适合团队协作模式"
+    },
+    {
+      "type": "assistant_text",
+      "content": "这个任务涉及多个独立模块，我来创建一个团队并行处理。",
+      "annotation": "Agent 识别出任务可分解为多个独立子任务，决定启用团队模式而非串行处理"
+    },
+    {
+      "type": "system_event",
+      "content": "创建团队:\n- 团队名: user-registration\n- 成员: frontend-agent, backend-agent\n- 协调者: 父 Agent 自身\n- 通信方式: 基于文件的消息传递",
+      "annotation": "团队创建时指定成员角色和通信协议。父 Agent 作为协调者负责任务分配和结果聚合"
+    },
+    {
+      "type": "system_event",
+      "content": "构建任务 DAG:\n1. [db-migration] 创建 users 表 → 无依赖\n2. [backend-api] 实现 /api/register → 依赖 db-migration\n3. [frontend-form] 实现注册表单 → 依赖 backend-api 的接口定义",
+      "annotation": "任务 DAG 确定执行顺序：数据库迁移无依赖可立即开始，API 和表单有先后依赖关系"
+    },
+    {
+      "type": "system_event",
+      "content": "派发任务:\n- backend-agent 认领 [db-migration]（无依赖，立即启动）\n- frontend-agent 等待 [backend-api] 的接口定义后启动",
+      "annotation": "基于 DAG 依赖关系调度：无依赖任务立即启动，有依赖任务进入等待队列"
+    },
+    {
+      "type": "tool_call",
+      "content": "[backend-agent] 创建数据库迁移文件:\nCREATE TABLE users (\n  id UUID PRIMARY KEY,\n  email VARCHAR(255) UNIQUE,\n  password_hash VARCHAR(255)\n);",
+      "toolName": "Write",
+      "annotation": "backend-agent 在独立上下文中完成数据库迁移，不受其他成员工作干扰"
+    },
+    {
+      "type": "system_event",
+      "content": "backend-agent → 团队消息:\n\"db-migration 完成，users 表已创建。开始实现 /api/register，接口定义: POST /api/register { email, password } → { id, token }\"",
+      "annotation": "成员通过消息传递共享关键信息。接口定义通过消息广播，frontend-agent 可提前开始工作"
+    },
+    {
+      "type": "tool_call",
+      "content": "[frontend-agent] 收到接口定义，开始实现注册表单:\n- React 组件 RegisterForm.tsx\n- 表单验证: email 格式、密码强度\n- 调用 POST /api/register",
+      "toolName": "Write",
+      "annotation": "frontend-agent 收到消息后立即启动，与 backend-agent 实现 API 逻辑并行工作"
+    },
+    {
+      "type": "tool_call",
+      "content": "[backend-agent] 实现 /api/register:\n- 密码 bcrypt 哈希\n- 邮箱唯一性校验\n- 返回 JWT token",
+      "toolName": "Write",
+      "annotation": "两个 Agent 此时真正并行：backend 写 API 逻辑，frontend 写表单组件"
+    },
+    {
+      "type": "system_event",
+      "content": "任务完成状态:\n✓ [db-migration] backend-agent 完成\n✓ [backend-api] backend-agent 完成\n✓ [frontend-form] frontend-agent 完成\n\n所有 DAG 节点已完成",
+      "annotation": "父 Agent 跟踪 DAG 中每个节点的完成状态，所有节点完成后进入关闭流程"
+    },
+    {
+      "type": "system_event",
+      "content": "团队关闭协议:\n1. 收集所有成员的工作摘要\n2. 验证跨模块一致性（API 接口 ↔ 前端调用）\n3. 释放子 Agent 资源\n4. 团队 user-registration 已解散",
+      "annotation": "关闭协议确保工作一致性：父 Agent 在解散前检查各成员产出是否兼容"
+    },
+    {
+      "type": "assistant_text",
+      "content": "注册功能已完成：\n- 数据库: users 表迁移文件已创建\n- 后端: POST /api/register 已实现（含密码哈希和 JWT）\n- 前端: RegisterForm 组件已实现（含表单验证）",
+      "annotation": "父 Agent 汇总团队成果，向用户报告。用户只看到最终结果，不需要关心团队协调细节"
+    }
+  ]
+}

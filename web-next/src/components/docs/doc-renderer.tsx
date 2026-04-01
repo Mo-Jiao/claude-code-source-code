@@ -37,6 +37,11 @@ function preProcessContainers(md: string): string {
 }
 
 function postProcessHtml(html: string): string {
+  // Make external links open in new tab
+  html = html.replace(
+    /<a href="(https?:\/\/[^"]+)">/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer">'
+  );
   // Add language labels to highlighted code blocks
   html = html.replace(
     /<pre><code class="hljs language-(\w+)">/g,

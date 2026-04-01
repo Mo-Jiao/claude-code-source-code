@@ -3,6 +3,7 @@
 import { DocRenderer } from "@/components/docs/doc-renderer";
 import { AgentLoopSimulator } from "@/components/simulator/agent-loop-simulator";
 import { Tabs } from "@/components/ui/tabs";
+import { LESSON_META, type LessonId } from "@/lib/constants";
 
 interface LessonDetailClientProps {
   lesson: string;
@@ -45,7 +46,7 @@ export function LessonDetailClient({ lesson, learn, source, deepDive }: LessonDe
         <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
           <img
             src={`/diagrams/${lesson}-${diagramName}.png`}
-            alt="架构图"
+            alt={`${LESSON_META[lesson as LessonId]?.title ?? lesson} 架构图`}
             className="w-full"
           />
         </div>

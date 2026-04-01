@@ -121,6 +121,8 @@ When deploying, follow these steps:
 | `context` | 执行上下文：`inline`（默认）或 `fork` | `inline` |
 | `hooks` | Skill 自带的 hooks 配置 | 无 |
 
+> `context: fork` 模式下 Skill 在子 agent 中执行，有独立的上下文和工具集。适合长时间运行的复杂 Skill（如代码审查），不影响主会话上下文。
+
 ### Layer 1: 名称层注入
 
 启动时，Claude Code 从多个来源扫描所有 Skill：
@@ -134,6 +136,8 @@ When deploying, follow these steps:
 扫描结果去重后，每个 Skill 的 **名称 + description + when_to_use** 被注入到 system prompt 中。这就是 Layer 1——让模型知道"我有哪些 Skill 可用"。
 
 Layer 1 的 token 成本很低。`estimateSkillFrontmatterTokens()` 只估算 `name + description + whenToUse` 的 token 数，通常每个 Skill 不超过 50-100 tokens。即使注册了 30 个 Skill，也只增加 ~3000 tokens。
+
+**优先级冲突解析**：去重通过 `getFileIdentity()`（基于 realpath）实现，检测的是同一文件的不同路径引用。如果 project 和 user 目录各有同名但不同内容的 Skill，行为取决于加载顺序（先加载的 wins）。
 
 ### Layer 2: 内容层加载
 
@@ -158,6 +162,12 @@ Claude Code 预装了一批核心 Skill，编译进二进制：
 | `debug` | 系统化调试流程 | `bundled/debug.ts` |
 | `simplify` | 审查代码质量和复用 | `bundled/simplify.ts` |
 | `update-config` | 配置 settings.json | `bundled/updateConfig.ts` |
+| `batch` | 批量处理多个文件/任务 | `bundled/batch.ts` |
+| `stuck` | 卡住时的自我诊断和恢复 | `bundled/stuck.ts` |
+| `skillify` | 将对话中的模式转化为新 Skill | `bundled/skillify.ts` |
+| `keybindings` | 快捷键配置和说明 | `bundled/keybindings.ts` |
+
+> 以上为常见内置 Skill，完整列表包括但不限于上述条目。Claude Code 团队会持续新增内置 Skill，具体以 `src/skills/bundled/` 目录下的源码为准。
 
 内置 Skill 通过 `registerBundledSkill()` 注册。它们也支持 `files` 字段——额外的参考文件会在首次调用时解压到磁盘（`getBundledSkillExtractDir()`），模型可以按需 Read。
 
@@ -944,6 +954,8 @@ async def main():
 
 Claude Code 的两层设计更省 token。关键 insight 是：模型只需要知道 Skill 的**存在和触发条件**就够了，不需要看到完整内容来决定是否调用。`when_to_use` 字段提供了足够的触发判断依据。
 
+**Cursor Rules**：Cursor 的 `.cursor/rules/` 系统支持 glob 路径匹配的条件激活，类似 Claude Code 的 `paths` frontmatter。但 Cursor Rules 没有两层注入——所有匹配的 Rules 内容直接注入 system prompt，大量 Rules 时 token 成本更高。
+
 ### SKILL.md 目录格式 vs 单文件格式
 
 新的 `/skills/` 目录只支持 `skill-name/SKILL.md` 格式，不支持单 `.md` 文件。好处：
@@ -966,6 +978,14 @@ if (loadedFrom !== 'mcp') {
 ```
 
 这防止了一种攻击场景：恶意 MCP server 在 Skill 内容中嵌入 `!rm -rf /` 这样的命令。
+
+### 安全：供应链攻击防护
+
+Snyk 的 ToxicSkills 研究发现了 335 个恶意 Skills，影响 300,000+ 用户。攻击向量包括：通过 skill 内容的 prompt injection、通过 shell 命令的数据渗出。Claude Code 的防御措施：
+
+- MCP 来源的 Skill 禁止 shell 命令（`loadedFrom !== 'mcp'` 检查，`loadSkillsDir.ts:374`）
+- `${CLAUDE_SKILL_DIR}` 参数替换限制在本地 Skill
+- 建议：安装第三方 Skill 前审查 SKILL.md 内容，特别关注 shell 命令
 
 ### 条件激活 vs 始终加载
 
@@ -1042,3 +1062,13 @@ Arcade.dev 指出：Skills、toolkits、functions、MCP servers 对模型而言*
 
 - [ToxicSkills: Agent Skills Supply Chain Compromise (Snyk)](https://snyk.io/) — Skills 供应链安全审计
 - [Memory Injection Through Nested Skills (snailsploit)](https://snailsploit.com/) — 嵌套 Skill 注入攻击
+
+---
+
+## 模拟场景
+
+<!--@include: ./_fragments/sim-s09.md-->
+
+## 设计决策
+
+<!--@include: ./_fragments/ann-s09.md-->

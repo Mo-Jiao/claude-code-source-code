@@ -1,51 +1,16 @@
 {
   "version": "s06",
-  "title": "Compact",
-  "description": "Agent compresses context when tokens exceed threshold",
+  "title": "设置层级合并",
+  "description": "四层配置从默认值到企业策略逐级合并，高优先级覆盖低优先级",
   "steps": [
-    {
-      "type": "user_message",
-      "content": "Analyze all Python files in this project and summarize each one",
-      "annotation": "A task that will generate large amounts of context"
-    },
-    {
-      "type": "tool_call",
-      "content": "find . -name '*.py' -type f",
-      "toolName": "bash",
-      "annotation": "Finding all files to analyze"
-    },
-    {
-      "type": "tool_result",
-      "content": "./src/main.py\n./src/utils.py\n./src/models.py\n./tests/test_main.py\n... (28 more files)",
-      "toolName": "bash",
-      "annotation": "32 files found -- reading all of them will generate massive context"
-    },
-    {
-      "type": "assistant_text",
-      "content": "I'll read and analyze each file systematically.",
-      "annotation": "Agent begins processing files one by one"
-    },
-    {
-      "type": "tool_call",
-      "content": "./src/main.py",
-      "toolName": "read_file",
-      "annotation": "Reading file 1 of 32..."
-    },
-    {
-      "type": "tool_result",
-      "content": "[... 450 lines of code ...]",
-      "toolName": "read_file",
-      "annotation": "Large file content added to messages[]"
-    },
-    {
-      "type": "system_event",
-      "content": "[ContextManager] Token count: 148,231 / 150,000 threshold\nTriggering 3-layer compression:\n  1. Drop tool_result content > 1000 chars -> replaced with summary\n  2. Merge sequential assistant turns\n  3. Summarize oldest 50% of conversation\nResult: 148,231 -> 42,087 tokens",
-      "annotation": "Compression fires automatically when approaching the limit"
-    },
-    {
-      "type": "assistant_text",
-      "content": "Continuing analysis with compressed context. Files 1-18 have been summarized, proceeding with remaining files.",
-      "annotation": "Forgetting old tool results enables infinite work -- the agent can process any number of files"
-    }
+    { "type": "system_event", "content": "── 配置加载开始 ──", "annotation": "每次会话启动时，按优先级加载四层配置" },
+    { "type": "system_event", "content": "Layer 1: 默认值\n{\n  \"permissions\": \"default\",\n  \"theme\": \"auto\",\n  \"maxTokens\": 200000\n}", "annotation": "最低优先级 — 硬编码在源码中的默认值" },
+    { "type": "system_event", "content": "Layer 2: 用户配置\n~/.claude/settings.json\n{\n  \"permissions\": \"auto-edit\",\n  \"theme\": \"dark\"\n}", "annotation": "用户级配置 — 覆盖默认值" },
+    { "type": "system_event", "content": "Layer 3: 项目配置\n.claude/settings.json\n{\n  \"permissions\": \"default\",\n  \"hooks\": { \"PreToolUse\": [...] }\n}", "annotation": "项目级配置 — 可覆盖用户配置" },
+    { "type": "system_event", "content": "Layer 4: 企业策略\nManaged Settings (MDM 分发)\n{\n  \"permissions\": \"default\",\n  \"disableTools\": [\"Bash\"]\n}", "annotation": "最高优先级 — 企业管理员强制策略，用户无法覆盖" },
+    { "type": "system_event", "content": "── 合并结果 ──\n{\n  \"permissions\": \"default\",     // 企业策略覆盖\n  \"theme\": \"dark\",              // 用户配置\n  \"maxTokens\": 200000,          // 默认值\n  \"hooks\": { \"PreToolUse\": [...] }, // 项目配置\n  \"disableTools\": [\"Bash\"]      // 企业策略\n}", "annotation": "高优先级覆盖低优先级，未设置的字段继承下一层" },
+    { "type": "user_message", "content": "帮我执行 npm test", "annotation": "用户请求调用 Bash 工具" },
+    { "type": "system_event", "content": "权限检查: Bash 工具\n→ disableTools 包含 \"Bash\"\n→ 来源: 企业策略 (不可覆盖)\n→ 结果: 拒绝", "annotation": "企业策略的 disableTools 生效，阻止 Bash 调用" },
+    { "type": "assistant_text", "content": "抱歉，Bash 工具被企业安全策略禁用。请联系管理员或使用其他方式运行测试。", "annotation": "Agent 告知用户限制来源，而非静默失败" }
   ]
 }

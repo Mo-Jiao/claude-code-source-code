@@ -1,0 +1,75 @@
+{
+  "version": "s13",
+  "decisions": [
+    {
+      "id": "shared-task-board-isolated-lanes",
+      "title": "Shared Task Board + Isolated Execution Lanes",
+      "description": "The team shares a centralized TaskList in `.claude/tasks/{teamName}/` for coordination, while each teammate executes in its own process or worktree. This preserves global visibility (who owns what, what is done) without forcing concurrent file edits in one mutable directory. The task board is the single source of truth for planning; execution lanes handle the work.",
+      "alternatives": "A single shared workspace is simpler but causes edit collisions and mixed git state. Fully independent task stores per agent avoid collisions but lose team-level visibility and make planning harder.",
+      "zh": {
+        "title": "共享任务板 + 隔离执行通道",
+        "description": "团队共享集中在 `.claude/tasks/{teamName}/` 的 TaskList 用于协调，每个队友在自己的进程或 worktree 中执行。这样既保留了全局可见性（谁在做什么、进展如何），又避免在同一目录中并发编辑文件。任务板是规划的唯一数据源，执行通道处理实际工作。"
+      },
+      "ja": {
+        "title": "共有タスクボード + 分離実行レーン",
+        "description": "チームは `.claude/tasks/{teamName}/` に集約した TaskList で調整を行い、各チームメイトは自身のプロセスまたは worktree で作業する。全体の可視性（担当と進捗）を維持しつつ、単一ディレクトリでの同時編集衝突を回避する。"
+      }
+    },
+    {
+      "id": "filesystem-mailbox-protocol",
+      "title": "File-System Mailbox for Inter-Agent Messaging",
+      "description": "Team members communicate by writing JSON files to each other's inbox directories (`.claude/teams/{name}/inbox/{agent}/`). This avoids introducing a message queue dependency, naturally supports cross-process communication (tmux teammates are separate processes), and provides persistence — messages survive crashes. For in-process teammates, an optimized fast path uses `queuePendingMessage` to bypass the filesystem.",
+      "alternatives": "An in-memory message queue is faster but cannot cross process boundaries and loses messages on crash. A full message broker (Redis, RabbitMQ) adds infrastructure complexity that is unnecessary for single-machine multi-agent scenarios.",
+      "zh": {
+        "title": "文件系统邮箱用于 Agent 间通信",
+        "description": "团队成员通过向对方的 inbox 目录写入 JSON 文件通信（`.claude/teams/{name}/inbox/{agent}/`）。无需引入消息队列依赖，天然支持跨进程通信（tmux 队友是独立进程），且消息持久化——崩溃后不丢失。对 in-process 队友有快速路径优化，直接通过 queuePendingMessage 绕过文件系统。"
+      },
+      "ja": {
+        "title": "エージェント間メッセージングにファイルシステムメールボックスを使用",
+        "description": "チームメンバーは相手の inbox ディレクトリ（`.claude/teams/{name}/inbox/{agent}/`）に JSON ファイルを書き込んで通信する。メッセージキューの依存を排除し、プロセス間通信を自然にサポートし、クラッシュ後もメッセージが永続化される。in-process チームメイトには queuePendingMessage による高速パスもある。"
+      }
+    },
+    {
+      "id": "in-process-vs-tmux-backends",
+      "title": "Multiple Runtime Backends: In-Process, Tmux, and iTerm2",
+      "description": "Teammates can run in-process (shared event loop, no IPC overhead), in tmux panes (independent processes, visually debuggable), or in iTerm2 tabs. The choice is per-member, allowing I/O-bound tasks to stay in-process for speed while CPU-intensive or isolation-critical tasks run in separate tmux processes. Each backend shares the same mailbox protocol.",
+      "alternatives": "A single backend simplifies implementation but forces a one-size-fits-all trade-off: in-process cannot provide full isolation, and tmux adds IPC overhead for lightweight tasks. Docker containers provide the strongest isolation but have seconds-long startup and GB-level image costs.",
+      "zh": {
+        "title": "多运行时后端：In-Process、Tmux 和 iTerm2",
+        "description": "队友可在进程内运行（共享事件循环、无 IPC 开销）、在 tmux pane 中运行（独立进程、可视化调试）或在 iTerm2 标签页中运行。选择按成员粒度，I/O 密集任务留在进程内提速，CPU 密集或需隔离的任务用 tmux 独立进程。所有后端共享同一套邮箱协议。"
+      },
+      "ja": {
+        "title": "複数ランタイムバックエンド：In-Process / Tmux / iTerm2",
+        "description": "チームメイトはインプロセス（共有イベントループ、IPC オーバーヘッドなし）、tmux ペーン（独立プロセス、視覚的デバッグ可能）、iTerm2 タブで実行できる。メンバー単位で選択でき、I/O バウンドはインプロセス、CPU 集約型や隔離が必要なタスクは tmux で実行する。"
+      }
+    },
+    {
+      "id": "graceful-shutdown-protocol",
+      "title": "Request-Response Shutdown Instead of Process Kill",
+      "description": "Shutting down a teammate requires a structured shutdown_request/shutdown_response handshake. The teammate can reject the request if it has unfinished work. This prevents data corruption from interrupted file writes, lost uncommitted git changes, and orphaned background shell tasks. The teammate knows its own state better than the leader.",
+      "alternatives": "Directly killing the process is simpler and faster but risks corrupted files, lost git state, and orphan processes. A timeout-based forced kill after a grace period is a middle ground but still lacks the ability for the agent to negotiate.",
+      "zh": {
+        "title": "请求-响应式关闭而非直接杀进程",
+        "description": "关闭队友需要结构化的 shutdown_request/shutdown_response 握手。队友可以在有未完成工作时拒绝关闭请求。这防止了中断文件写入导致的数据损坏、未提交 git 修改的丢失以及后台 shell 任务变成孤儿进程。队友比 leader 更清楚自己的工作状态。"
+      },
+      "ja": {
+        "title": "プロセスキルではなくリクエスト・レスポンス型シャットダウン",
+        "description": "チームメイトのシャットダウンには shutdown_request/shutdown_response の構造化ハンドシェイクが必要。未完了の作業がある場合、チームメイトはリクエストを拒否できる。これにより、ファイル書き込み中断によるデータ破損や、未コミット変更の喪失、孤児プロセスを防ぐ。"
+      }
+    },
+    {
+      "id": "idle-as-normal-state",
+      "title": "IDLE Is a Normal State, Not an Error",
+      "description": "Unlike sub-agents (s12) that exit immediately upon completion, team members enter IDLE after finishing a task and wait for new messages. This avoids constant create/destroy overhead for long-lived collaborators. Only an explicit shutdown_request triggers the shutdown flow, making the lifecycle deterministic and observable.",
+      "alternatives": "Auto-exiting after each task (sub-agent model) is simpler but causes repeated spawn overhead and loses accumulated context. Always-running without an IDLE concept wastes resources and makes it hard to distinguish between 'waiting for work' and 'stuck'.",
+      "zh": {
+        "title": "IDLE 是正常状态，不是错误",
+        "description": "与完成即退出的子 agent（s12）不同，团队成员完成任务后进入 IDLE 状态等待新消息。这避免了长期协作者频繁创建/销毁的开销。只有显式的 shutdown_request 才触发关闭流程，使生命周期确定且可观测。"
+      },
+      "ja": {
+        "title": "IDLE は正常状態でありエラーではない",
+        "description": "完了後すぐ終了するサブエージェント（s12）と異なり、チームメンバーはタスク完了後 IDLE 状態に入り新しいメッセージを待つ。長期コラボレーターの頻繁な生成・破棄オーバーヘッドを回避する。明示的な shutdown_request のみがシャットダウンフローを起動する。"
+      }
+    }
+  ]
+}

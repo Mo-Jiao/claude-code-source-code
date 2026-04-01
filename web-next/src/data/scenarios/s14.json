@@ -1,0 +1,66 @@
+{
+  "version": "s14",
+  "title": "Worktree 隔离",
+  "description": "使用 Git Worktree 在隔离分支上修复 Bug，不影响当前工作区",
+  "steps": [
+    {
+      "type": "user_message",
+      "content": "线上有个紧急 bug：用户登录后 token 过期时间设成了 10 秒。帮我在单独分支上修复，别影响我当前的工作",
+      "annotation": "用户当前分支有未完成的工作，需要在不丢失当前状态的前提下修复紧急 bug"
+    },
+    {
+      "type": "assistant_text",
+      "content": "我用 Worktree 创建一个隔离的工作区来修复这个 bug，不会影响你当前的代码。",
+      "annotation": "Worktree 是 Git 原生能力：在同一仓库下创建独立工作目录，避免 stash/commit 未完成的工作"
+    },
+    {
+      "type": "system_event",
+      "content": "EnterWorktree:\n- 位置: .claude/worktrees/hotfix-token-expiry\n- 新分支: hotfix/token-expiry (基于 HEAD)\n- 当前工作区: 完全不受影响",
+      "annotation": "Worktree 在 .claude/worktrees/ 下创建，自动基于 HEAD 创建新分支。原工作目录保持不变"
+    },
+    {
+      "type": "system_event",
+      "content": "工作目录已切换:\n/project → /project/.claude/worktrees/hotfix-token-expiry\n\n会话的 CWD 自动更新，所有后续操作在隔离环境中执行",
+      "annotation": "CWD 切换是自动的：后续的文件读写、Git 操作都在 worktree 中进行，无需手动管理路径"
+    },
+    {
+      "type": "tool_call",
+      "content": "定位问题: src/auth/token.ts\n\nconst TOKEN_EXPIRY = 10; // 秒 ← bug 在这里\n应该是: 10 * 60 * 60 // 10 小时",
+      "toolName": "Grep",
+      "annotation": "在隔离的 worktree 中搜索和定位 bug，所有操作与主工作区完全独立"
+    },
+    {
+      "type": "tool_call",
+      "content": "修复 src/auth/token.ts:\n- const TOKEN_EXPIRY = 10;\n+ const TOKEN_EXPIRY = 10 * 60 * 60; // 10 小时",
+      "toolName": "Edit",
+      "annotation": "在 worktree 中修改文件，主工作区的同一文件不受影响"
+    },
+    {
+      "type": "tool_result",
+      "content": "✓ File edited",
+      "toolName": "Edit",
+      "annotation": "修改只存在于 worktree 分支，主分支的 token.ts 保持原样"
+    },
+    {
+      "type": "tool_call",
+      "content": "运行测试: npm test -- --grep 'token expiry'\n\n✓ token should expire after 10 hours\n✓ refresh token should work before expiry\n2 passing (45ms)",
+      "toolName": "Bash",
+      "annotation": "在隔离环境中运行测试验证修复，确保不引入回归问题"
+    },
+    {
+      "type": "system_event",
+      "content": "Git commit:\nbranch: hotfix/token-expiry\nmessage: \"fix: set token expiry to 10 hours instead of 10 seconds\"\n\n1 file changed, 1 insertion(+), 1 deletion(-)",
+      "annotation": "在 worktree 分支上提交修复。此 commit 独立于主分支，可以直接推送或创建 PR"
+    },
+    {
+      "type": "system_event",
+      "content": "ExitWorktree (action: keep):\n- 保留 worktree 和分支 hotfix/token-expiry\n- CWD 恢复到原工作目录\n- 缓存已清理，会话状态回到主工作区",
+      "annotation": "选择 keep 保留 worktree：用户可以后续 review、推送或合并。选择 remove 则清理所有痕迹"
+    },
+    {
+      "type": "assistant_text",
+      "content": "Bug 已修复并提交到 hotfix/token-expiry 分支：\n- 问题：TOKEN_EXPIRY 设为 10 秒\n- 修复：改为 10 * 60 * 60（10 小时）\n- 测试通过，你的当前工作完全没有受影响",
+      "annotation": "Worktree 的核心价值：紧急修复不打断当前工作流。修完即走，主工作区纹丝不动"
+    }
+  ]
+}

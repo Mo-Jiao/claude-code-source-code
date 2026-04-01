@@ -173,6 +173,10 @@ MEMORY.md 是记忆目录的索引文件。它**始终被注入到上下文中**
 
 这个设计的关键是索引与内容分离。MEMORY.md 始终在上下文中，但只占用很少的 token。完整内容通过智能检索按需加载。
 
+### Extract Memories：自动记忆提取
+
+源码 `paths.ts:69-77` 中的 `isExtractModeActive()` 控制着"记忆提取后台代理"。这是一个在对话结束后自动从对话内容中提取值得记住的信息并保存为记忆文件的机制。用户不需要显式说"记住这个"，系统会自动识别和提取符合四种类型的信息。这标志着 Memory 系统从"被动存储"向"主动提取"的关键进化。
+
 ## Python 伪代码
 
 <details>
@@ -916,6 +920,10 @@ Claude Code 的 prompt 中明确区分了三种持久化机制：
 
 如果要开始一个复杂任务，应该用 Plan；如果要跟踪进度，应该用 Task；如果学到了未来对话也有用的信息，才用 Memory。这个区分避免了记忆系统被短期信息淹没。
 
+### 进阶：团队记忆
+
+团队模式下，记忆分为 **private**（个人）和 **team**（共享）两个作用域。`teamMemPrompts.ts` 和 `TYPES_SECTION_COMBINED`（含 `<scope>` 标签）定义了作用域选择逻辑。例如：feedback 类型的"不要 mock 数据库"是 team 级（项目规范），而"我喜欢简洁的回复"是 private 级（个人偏好）。`getTeamMemPath()` 返回团队记忆的共享目录路径。
+
 ## Why：设计决策与行业上下文
 
 ### 状态外化到文件系统：Anthropic 双体架构的核心洞察
@@ -931,6 +939,14 @@ LangChain 四策略框架的第一个就是 **Write**——将信息持久化到
 ### Durability 问题的对策
 
 Philschmid 指出模型在 50 步之后会出现指令遵循衰减 [R1-1]。Memory 系统是对抗 durability 衰减的关键工具——即使上下文被压缩，关键指令仍能通过 MEMORY.md 被重新加载进入新的上下文窗口。
+
+### AGENTS.md 通用标准
+
+2025 年中，Sourcegraph、OpenAI、Google、Cursor 等合作推出了 AGENTS.md 作为跨工具的通用 agent 配置标准。Claude Code 的 CLAUDE.md 是同一理念的 Anthropic 实现。差异在于 CLAUDE.md 更深度集成（支持三级层次、自动加载），而 AGENTS.md 侧重跨工具互操作。
+
+### Windsurf Cascade 对比
+
+Windsurf 也实现了自动跨会话记忆，但采用黑盒方式——用户无法查看或编辑记忆内容。Claude Code 的文件系统透明方案（Markdown + YAML frontmatter）让用户可以直接审计、编辑、甚至 git 管理记忆。
 
 > **参考来源：** Anthropic [R1-5]、LangChain [R1-3]、Philschmid [R1-1]。完整引用见 `docs/research/05-harness-trends-deep-20260401.md`。
 
@@ -976,3 +992,13 @@ Philschmid 指出模型在 50 步之后会出现指令遵循衰减 [R1-1]。Memo
 ## 推荐阅读
 
 - [Memory poisoning in AI agents (christian-schneider.net)](https://christian-schneider.net/) — Memory Poisoning 攻击面分析
+
+---
+
+## 模拟场景
+
+<!--@include: ./_fragments/sim-s08.md-->
+
+## 设计决策
+
+<!--@include: ./_fragments/ann-s08.md-->

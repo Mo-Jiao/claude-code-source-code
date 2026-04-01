@@ -1,0 +1,143 @@
+/* ========================================
+   Simulator Step Cards
+   ======================================== */
+
+.sim-step {
+  border: 1px solid var(--vp-c-divider);
+  padding: 1rem;
+  margin: 0.75rem 0;
+  border-radius: 6px;
+  background: var(--vp-c-bg-soft);
+}
+
+/* Step type borders */
+.sim-user_message {
+  border-left: 4px solid #3b82f6;
+}
+
+.sim-assistant_text {
+  border-left: 4px solid #9ca3af;
+}
+
+.sim-tool_call {
+  border-left: 4px solid #f59e0b;
+}
+
+.sim-tool_result {
+  border-left: 4px solid #10b981;
+}
+
+.sim-system_event {
+  border-left: 4px solid #8b5cf6;
+}
+
+/* ========================================
+   Step Sub-elements
+   ======================================== */
+
+.sim-step-header {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.sim-user_message .sim-step-header {
+  color: #3b82f6;
+}
+
+.sim-assistant_text .sim-step-header {
+  color: #9ca3af;
+}
+
+.sim-tool_call .sim-step-header {
+  color: #f59e0b;
+}
+
+.sim-tool_result .sim-step-header {
+  color: #10b981;
+}
+
+.sim-system_event .sim-step-header {
+  color: #8b5cf6;
+}
+
+.sim-step-content {
+  /* Normal text styling, inherits from VitePress defaults */
+}
+
+.sim-step-annotation {
+  font-style: italic;
+  color: var(--vp-c-text-2);
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* ========================================
+   Dark Mode Adjustments
+   ======================================== */
+
+.dark .sim-user_message .sim-step-header {
+  color: #60a5fa;
+}
+
+.dark .sim-assistant_text .sim-step-header {
+  color: #d1d5db;
+}
+
+.dark .sim-tool_call .sim-step-header {
+  color: #fbbf24;
+}
+
+.dark .sim-tool_result .sim-step-header {
+  color: #34d399;
+}
+
+.dark .sim-system_event .sim-step-header {
+  color: #a78bfa;
+}
+
+/* ========================================
+   Design Decision Blocks
+   ======================================== */
+
+.design-decisions {
+  margin: 1.5rem 0;
+}
+
+.design-decisions details {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  background: var(--vp-c-bg-soft);
+  overflow: hidden;
+}
+
+.design-decisions details[open] {
+  padding-bottom: 0.75rem;
+}
+
+.design-decisions summary {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.design-decisions summary::before {
+  content: '▸ ';
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.design-decisions details[open] > summary::before {
+  content: '▾ ';
+}
+
+.design-decisions summary:hover {
+  background: var(--vp-c-bg-mute);
+}
+
+.design-decisions details > *:not(summary) {
+  padding: 0 1rem;
+}

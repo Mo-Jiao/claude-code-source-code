@@ -9,6 +9,7 @@
 | `src/entrypoints/cli.tsx` | CLI 入口，`--version` 快速路径优化 | s01, s16 |
 | `src/main.tsx` | 主函数（4683 LOC），参数解析 + 启动 | s01, s16 |
 | `src/setup.ts` | 会话初始化，worktree, hooks 注册 | s01, s03 |
+| `src/replLauncher.tsx` | REPL 启动器，launchRepl() — Ink 渲染入口 | s00, s16 |
 
 ## 核心循环
 
@@ -41,11 +42,11 @@
 
 | 路径 | 说明 | 相关课程 |
 |:-----|:-----|:---------|
-| `src/utils/permissions/PermissionMode.ts` | 5 种权限模式定义 | s04 |
+| `src/utils/permissions/PermissionMode.ts` | 5 种权限模式 + PermissionRuleSource（8 种来源，含 `command`） | s04 |
 | `src/utils/permissions/permissions.ts` | 权限评估引擎 | s04 |
 | `src/utils/permissions/bashClassifier.ts` | Bash 命令风险分级 | s04 |
 | `src/utils/permissions/dangerousPatterns.ts` | 危险命令模式库 | s04 |
-| `src/utils/permissions/denialTracking.ts` | 否决追踪 | s04 |
+| `src/utils/permissions/denialTracking.ts` | 否决追踪，DENIAL_LIMITS（maxConsecutive / maxTotal） | s04 |
 | `src/utils/permissions/permissionSetup.ts` | 权限初始化 | s04 |
 
 ## Hooks 系统
@@ -54,6 +55,7 @@
 |:-----|:-----|:---------|
 | `src/utils/hooks/` | Hooks 系统（27 个文件） | s05 |
 | `src/types/hooks.ts` | 7 种钩子类型定义 | s05 |
+| `src/entrypoints/sdk/coreTypes.ts` | HOOK_EVENTS 常量，27 种钩子事件 | s05 |
 | `src/utils/hooks/execAgentHook.ts` | 子进程执行钩子 | s05 |
 | `src/utils/hooks/AsyncHookRegistry.ts` | 异步钩子注册表 | s05 |
 | `src/utils/hooks/hooksConfigManager.ts` | 钩子配置管理 | s05 |
@@ -69,6 +71,7 @@
 | 路径 | 说明 | 相关课程 |
 |:-----|:-----|:---------|
 | `src/services/compact/` | 三层压缩策略 | s07 |
+| `src/services/compact/microCompact.ts:36` | TIME_BASED_MC_CLEARED_MESSAGE 常量 | s07 |
 
 ## 记忆系统
 
@@ -81,7 +84,7 @@
 | 路径 | 说明 | 相关课程 |
 |:-----|:-----|:---------|
 | `src/skills/loadSkillsDir.ts` | Skill 目录扫描加载 | s09 |
-| `src/skills/bundledSkills.ts` | 5 个内置 Skill | s09 |
+| `src/skills/bundledSkills.ts` | 17+ 内置 Skill（含 batch, stuck, skillify, keybindings） | s09 |
 | `src/skills/mcpSkillBuilders.ts` | MCP 衍生 Skill | s09 |
 
 ## Plan 模式
@@ -105,7 +108,7 @@
 
 | 路径 | 说明 | 相关课程 |
 |:-----|:-----|:---------|
-| `src/tools/AgentTool/` | 子 Agent 派发 | s12 |
+| `src/tools/AgentTool/` | 子 Agent 派发，6 种 agent 类型（含 claude-code-guide, verification） | s12 |
 | `src/tasks/InProcessTeammateTask.ts` | 进程内 Agent 执行 | s12 |
 | `src/tasks/RemoteAgentTask.ts` | 远程 Agent 执行 | s12 |
 | `src/tools/TeamCreateTool/` | 团队创建 | s13 |

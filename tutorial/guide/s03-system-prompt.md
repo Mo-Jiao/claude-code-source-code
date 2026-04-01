@@ -122,7 +122,11 @@ return [
 ].filter(s => s !== null)
 ```
 
+> **注意**：某些"静态"section 有条件开关。例如 `getSimpleDoingTasksSection()` 的包含取决于 `outputStyleConfig.keepCodingInstructions`。但这些开关变化频率很低，不显著影响缓存命中率。
+
 ### 2. 前缀匹配：为什么顺序如此重要
+
+> **KV-cache 背景**：LLM 推理时，每个 token 的 attention 计算结果（Key-Value 对）可以被缓存。前缀匹配意味着如果两个请求的开头完全相同，这些 KV 对可以直接复用，避免重复计算。
 
 Anthropic 的 Prompt Cache 工作原理：
 
@@ -850,7 +854,11 @@ if __name__ == "__main__":
 | **Aider** | 需要手动开启缓存，无分段优化 | 中 |
 | **Cline** | 基础 prompt caching | 中 |
 
+> **Aider 的缓存实现**：Aider 在 v0.45+ 支持 `--cache-prompts`，但只是简单地在 system prompt 上加 `cache_control`，没有 Claude Code 的分段优化（静态/动态边界、全局/org 作用域选择）。这体现了"同一特性的不同工程深度"。
+
 Claude Code 在这个维度上的投入远超竞品。看看 `claude.ts` 文件中关于缓存的代码量就知道了 -- 超过 500 行专门处理 `cache_control`、`cache_reference`、`cache_edits` 等参数。
+
+> **高级缓存特性**：除了 `cache_control: { type: "ephemeral" }` 和 `scope` 参数，Claude Code 还使用了 `cache_reference`（引用已有缓存而不重新传输）和 `cache_edits`（增量更新缓存内容）——比简单 prefix caching 更精细的控制。
 
 这不仅是成本优化（缓存命中时 token 价格降低 90%），更是延迟优化 -- 缓存命中意味着服务端不需要重新计算那部分 attention，响应速度更快。
 
@@ -965,3 +973,13 @@ wc -c system_prompt.txt  # 查看字节数
 ## 推荐阅读
 
 - [Context Engineering (Simon Willison)](https://simonwillison.net/) — "Context Engineering" 如何取代 "Prompt Engineering"
+
+---
+
+## 模拟场景
+
+<!--@include: ./_fragments/sim-s03.md-->
+
+## 设计决策
+
+<!--@include: ./_fragments/ann-s03.md-->

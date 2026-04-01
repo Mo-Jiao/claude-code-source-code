@@ -1,0 +1,68 @@
+{
+  "version": "s15",
+  "title": "MCP 服务器集成",
+  "description": "通过 MCP 协议连接外部服务器，发现并调用第三方工具扩展 Agent 能力",
+  "steps": [
+    {
+      "type": "user_message",
+      "content": "帮我看看 GitHub 上 #42 这个 issue 的详情，然后创建一个 PR 修复它",
+      "annotation": "用户需要与 GitHub 交互，这超出了内置工具的能力范围，需要 MCP 服务器提供扩展工具"
+    },
+    {
+      "type": "system_event",
+      "content": "检查 MCP 配置 (.claude/settings.json):\nmcpServers: {\n  \"github\": {\n    \"command\": \"npx\",\n    \"args\": [\"-y\", \"@modelcontextprotocol/server-github\"],\n    \"env\": { \"GITHUB_TOKEN\": \"***\" }\n  }\n}",
+      "annotation": "MCP 服务器在 settings.json 中声明式配置。启动时自动连接，无需用户手动管理进程"
+    },
+    {
+      "type": "system_event",
+      "content": "MCP 握手:\n1. 启动 server-github 进程（stdio 传输）\n2. 发送 initialize 请求\n3. 服务器返回能力清单:\n   - tools: [get_issue, create_pull_request, list_commits, ...]\n   - resources: [repo://owner/name]\n4. 握手完成，工具已注册",
+      "annotation": "MCP 使用 JSON-RPC over stdio 通信。握手阶段交换能力声明，Agent 动态获知可用工具列表"
+    },
+    {
+      "type": "system_event",
+      "content": "工具发现:\n新增 MCP 工具已合并到 Agent 工具列表:\n- mcp__github__get_issue\n- mcp__github__create_pull_request\n- mcp__github__create_branch\n共 12 个工具可用",
+      "annotation": "MCP 工具以 mcp__{server}__{tool} 格式命名，与内置工具统一管理。Agent 像调用内置工具一样调用 MCP 工具"
+    },
+    {
+      "type": "tool_call",
+      "content": "mcp__github__get_issue:\n  owner: \"acme-corp\"\n  repo: \"web-app\"\n  issue_number: 42",
+      "toolName": "mcp__github__get_issue",
+      "annotation": "Agent 通过标准工具调用接口调用 MCP 工具，底层自动序列化为 JSON-RPC 请求发送给 MCP 服务器"
+    },
+    {
+      "type": "tool_result",
+      "content": "Issue #42: \"登录页面在 Safari 上样式错乱\"\n- 状态: open\n- 标签: bug, ui\n- 描述: Safari 16 下 flex gap 不生效，按钮堆叠在一起",
+      "toolName": "mcp__github__get_issue",
+      "annotation": "MCP 服务器处理 GitHub API 调用并返回结构化结果，Agent 无需知道 GitHub API 细节"
+    },
+    {
+      "type": "tool_call",
+      "content": "修复 src/pages/login.css:\n- display: flex; gap: 16px;\n+ display: flex; gap: 16px;\n+ /* Safari fallback */\n+ > * + * { margin-left: 16px; }",
+      "toolName": "Edit",
+      "annotation": "Agent 使用内置工具修复代码，MCP 工具和内置工具在同一工作流中无缝配合"
+    },
+    {
+      "type": "tool_result",
+      "content": "✓ File edited",
+      "toolName": "Edit",
+      "annotation": "代码修复完成，接下来用 MCP 工具创建 PR"
+    },
+    {
+      "type": "tool_call",
+      "content": "mcp__github__create_pull_request:\n  owner: \"acme-corp\"\n  repo: \"web-app\"\n  title: \"fix: Safari flex gap fallback for login page\"\n  body: \"Fixes #42. 添加 Safari 16 的 flex gap 降级方案。\"\n  head: \"fix/safari-login-layout\"\n  base: \"main\"",
+      "toolName": "mcp__github__create_pull_request",
+      "annotation": "通过 MCP 工具创建 PR，底层由 MCP 服务器调用 GitHub API，Agent 只需提供参数"
+    },
+    {
+      "type": "tool_result",
+      "content": "✓ Pull Request #58 created\nhttps://github.com/acme-corp/web-app/pull/58",
+      "toolName": "mcp__github__create_pull_request",
+      "annotation": "MCP 的核心价值：Agent 通过标准协议获得无限扩展能力，无需为每个外部服务编写定制集成"
+    },
+    {
+      "type": "assistant_text",
+      "content": "已完成：\n- Issue #42 是 Safari flex gap 兼容性问题\n- 已添加 margin-left 降级方案\n- PR #58 已创建并关联 Issue\n\nhttps://github.com/acme-corp/web-app/pull/58",
+      "annotation": "整个流程中 MCP 工具与内置工具无缝衔接：MCP 负责外部服务交互，内置工具负责本地文件操作"
+    }
+  ]
+}

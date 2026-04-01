@@ -1,0 +1,75 @@
+{
+  "version": "s14",
+  "decisions": [
+    {
+      "id": "git-worktree-over-docker",
+      "title": "Git Worktree for File Isolation Instead of Docker Containers",
+      "description": "Claude Code uses `git worktree add` to create lightweight working copies that share the same .git object database. Creation takes ~100ms (vs seconds for Docker), disk overhead is minimal (only working files, no image), and no complex network/volume mapping is needed. For the specific problem of preventing multi-agent file conflicts, file-level isolation is sufficient — process and network isolation would be over-engineering.",
+      "alternatives": "Docker containers provide full process and network isolation but have 2-10s startup, GB-level image costs, and complex configuration. Sandboxed filesystems (Codex approach) are stronger but more restrictive. No isolation at all (Cursor approach) works for single-user but fails with concurrent agents.",
+      "zh": {
+        "title": "用 Git Worktree 而非 Docker 容器实现文件隔离",
+        "description": "Claude Code 使用 `git worktree add` 创建共享 .git 对象库的轻量级工作副本。创建耗时约 100ms（Docker 需要秒级），磁盘开销极小（只有工作文件，无镜像），无需复杂的网络/卷映射配置。对于防止多 agent 文件冲突这个具体问题，文件级隔离已经足够，进程和网络隔离是过度工程。"
+      },
+      "ja": {
+        "title": "Docker コンテナではなく Git Worktree でファイル分離",
+        "description": "Claude Code は `git worktree add` で .git オブジェクトデータベースを共有する軽量な作業コピーを作成する。作成は約 100ms（Docker は数秒）、ディスクは作業ファイル分のみ。マルチエージェントのファイル競合防止にはファイルレベルの分離で十分であり、プロセス・ネットワーク分離は過剰設計となる。"
+      }
+    },
+    {
+      "id": "fail-closed-worktree-deletion",
+      "title": "Fail-Closed Deletion: Refuse to Remove When State Is Unknown",
+      "description": "ExitWorktreeTool refuses to delete a worktree when `git status` or `git rev-list` commands fail (state cannot be determined). The cost of accidental deletion (hours of lost work) far exceeds the cost of keeping an unnecessary worktree (a few MB of disk). Stale worktrees are recovered by the periodic cleanup mechanism instead.",
+      "alternatives": "Fail-open deletion (delete even when state is uncertain) risks destroying user work. Requiring manual cleanup only is safe but accumulates disk waste over time. A timeout-based approach adds complexity without clear benefit.",
+      "zh": {
+        "title": "Fail-Closed 删除：状态不明时拒绝删除",
+        "description": "ExitWorktreeTool 在 git status 或 git rev-list 命令失败（无法确定状态）时拒绝删除 worktree。误删的代价（丢失数小时工作）远大于多保留一个 worktree 的代价（几 MB 磁盘）。陈旧的 worktree 由定期清理机制回收。"
+      },
+      "ja": {
+        "title": "Fail-Closed 削除：状態不明時は削除を拒否",
+        "description": "ExitWorktreeTool は git status や git rev-list が失敗して状態を判定できない場合、worktree の削除を拒否する。誤削除のコスト（数時間の作業喪失）は不要な worktree 保持のコスト（数 MB のディスク）を大きく上回る。古い worktree は定期クリーンアップで回収される。"
+      }
+    },
+    {
+      "id": "worktreeinclude-for-gitignored-files",
+      "title": ".worktreeinclude: Copying Gitignored Files to Worktrees",
+      "description": "A `.worktreeinclude` file lists gitignored files that should be copied into new worktrees (e.g., `.env.local`, build caches). Many projects cannot run without these files, so a bare worktree would be useless. The file uses glob patterns and is processed during post-creation setup.",
+      "alternatives": "Not copying any gitignored files keeps worktrees clean but makes them non-functional for many projects. Copying all gitignored files wastes disk and may include large build artifacts. Symlinking works for some files but not for files that need independent copies (like .env with different configs).",
+      "zh": {
+        "title": ".worktreeinclude：复制 gitignored 文件到 Worktree",
+        "description": "`.worktreeinclude` 文件列出应被复制到新 worktree 的 gitignored 文件（如 `.env.local`、编译缓存）。许多项目缺少这些文件就无法运行，所以裸 worktree 是无用的。该文件使用 glob 模式，在创建后设置阶段处理。"
+      },
+      "ja": {
+        "title": ".worktreeinclude：gitignore されたファイルを Worktree にコピー",
+        "description": "`.worktreeinclude` ファイルは新しい worktree にコピーすべき gitignore 対象ファイル（`.env.local`、ビルドキャッシュなど）を列挙する。多くのプロジェクトはこれらのファイルなしでは動作しないため、素の worktree は役に立たない。"
+      }
+    },
+    {
+      "id": "canonical-git-root-for-agent-worktrees",
+      "title": "findCanonicalGitRoot Prevents Nested Worktree Accumulation",
+      "description": "Agent worktrees always use `findCanonicalGitRoot` (which traverses back to the true main repo) instead of `findGitRoot` (which might return a worktree's .git pointer). This ensures all worktrees are flat siblings under `<main-repo>/.claude/worktrees/`, preventing nested worktrees that would escape periodic cleanup and cause cascade-deletion when a parent worktree is removed.",
+      "alternatives": "Using `findGitRoot` would create worktrees under the current worktree's `.claude/worktrees/` — invisible to the main cleanup scanner, and risking cascade deletion. Allowing arbitrary nesting adds complexity to the cleanup algorithm.",
+      "zh": {
+        "title": "findCanonicalGitRoot 防止 Worktree 嵌套堆积",
+        "description": "Agent worktree 始终使用 `findCanonicalGitRoot`（回溯到真正的主仓库根目录）而非 `findGitRoot`（可能返回 worktree 的 .git 指针目录）。这确保所有 worktree 平铺在 `<主仓库>/.claude/worktrees/` 下，避免嵌套 worktree 逃脱定期清理以及父 worktree 被删时连带删除子 worktree。"
+      },
+      "ja": {
+        "title": "findCanonicalGitRoot でネスト Worktree の蓄積を防止",
+        "description": "エージェント worktree は常に `findCanonicalGitRoot`（真のメインリポジトリまで遡る）を使い、`findGitRoot`（worktree の .git ポインタを返しうる）は使わない。すべての worktree を `<メインリポ>/.claude/worktrees/` にフラットに配置し、ネストによるクリーンアップ漏れや連鎖削除を防ぐ。"
+      }
+    },
+    {
+      "id": "ephemeral-pattern-based-cleanup",
+      "title": "Pattern-Based Cleanup Only for Ephemeral Worktrees",
+      "description": "Stale worktree cleanup matches against specific ephemeral patterns (`agent-a*`, `wf_*`, `bridge-*`) and never touches user-named worktrees. Combined with mtime checks, git status verification (no uncommitted changes), and unpushed commit checks, this provides a four-layer safety net. The `-uno` flag ignores untracked files since 30-day-old agent worktree untracked files are almost certainly build artifacts.",
+      "alternatives": "Cleaning all old worktrees indiscriminately risks deleting user-created worktrees with valuable work. Never cleaning requires manual management and accumulates disk waste. A single-layer check (mtime only) is not safe enough — a worktree might be old but have uncommitted changes.",
+      "zh": {
+        "title": "基于模式匹配的清理仅针对临时 Worktree",
+        "description": "陈旧 worktree 清理仅匹配特定临时模式（`agent-a*`、`wf_*`、`bridge-*`），永远不触碰用户命名的 worktree。结合修改时间检查、git status 验证（无未提交修改）和未推送提交检查，提供四层安全网。`-uno` 标志忽略 untracked 文件，因为 30 天前的 agent worktree 中的 untracked 文件几乎肯定是构建产物。"
+      },
+      "ja": {
+        "title": "パターンベースのクリーンアップは一時的 Worktree のみ対象",
+        "description": "古い worktree のクリーンアップは特定の一時パターン（`agent-a*`、`wf_*`、`bridge-*`）にのみマッチし、ユーザー命名の worktree には触れない。mtime チェック・git status 検証・未プッシュコミット確認の 4 層セーフティネットを備える。`-uno` フラグで untracked ファイルを無視する。"
+      }
+    }
+  ]
+}

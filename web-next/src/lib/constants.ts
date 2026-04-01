@@ -15,7 +15,7 @@ export type LayerId =
   | "ecosystem";
 
 export const LESSON_META: Record<
-  string,
+  LessonId,
   {
     title: string;
     subtitle: string;
@@ -149,7 +149,7 @@ export const LAYERS: {
   id: LayerId;
   label: string;
   color: string;
-  lessons: string[];
+  lessons: LessonId[];
 }[] = [
   { id: "intro", label: "导论", color: "#6B7280", lessons: ["s00"] },
   { id: "core", label: "核心循环", color: "#3B82F6", lessons: ["s01", "s02", "s03"] },
