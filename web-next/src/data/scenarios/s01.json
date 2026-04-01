@@ -1,51 +1,18 @@
 {
   "version": "s01",
-  "title": "The Agent Loop",
-  "description": "A minimal agent that uses only bash to accomplish tasks",
+  "title": "Agent Loop",
+  "description": "一个完整的 agent 循环：用户请求 → 模型思考 → 工具调用 → 结果返回 → 继续或结束",
   "steps": [
-    {
-      "type": "user_message",
-      "content": "Create a file called hello.py that prints 'Hello, World!'",
-      "annotation": "User sends a task to the agent"
-    },
-    {
-      "type": "assistant_text",
-      "content": "I'll create that file for you using bash.",
-      "annotation": "The model decides to use its only tool: bash"
-    },
-    {
-      "type": "tool_call",
-      "content": "echo 'print(\"Hello, World!\")' > hello.py",
-      "toolName": "bash",
-      "annotation": "Tool call: the model generates a bash command"
-    },
-    {
-      "type": "tool_result",
-      "content": "",
-      "toolName": "bash",
-      "annotation": "Bash returns empty output (success)"
-    },
-    {
-      "type": "assistant_text",
-      "content": "Let me verify the file was created correctly.",
-      "annotation": "The loop continues: model sees the result and decides next action"
-    },
-    {
-      "type": "tool_call",
-      "content": "cat hello.py",
-      "toolName": "bash",
-      "annotation": "Another bash call to verify"
-    },
-    {
-      "type": "tool_result",
-      "content": "print(\"Hello, World!\")",
-      "toolName": "bash",
-      "annotation": "File contents confirmed"
-    },
-    {
-      "type": "assistant_text",
-      "content": "Done! I've created hello.py with the print statement. You can run it with `python hello.py`.",
-      "annotation": "stop_reason != 'tool_use' -> loop breaks, agent responds to user"
-    }
+    { "type": "user_message", "content": "请修复 login.ts 中的认证 bug", "annotation": "用户提交任务，进入 agent 循环" },
+    { "type": "assistant_text", "content": "我来搜索一下相关的错误信息...", "annotation": "模型决定第一步行动：搜索" },
+    { "type": "tool_call", "content": "grep -r 'AuthError' src/", "toolName": "Bash", "annotation": "stop_reason='tool_use'，进入工具执行分支" },
+    { "type": "tool_result", "content": "src/login.ts:42: throw new AuthError('token expired')\nsrc/login.ts:58: catch(AuthError)", "toolName": "Bash", "annotation": "工具结果追加到消息列表，循环继续" },
+    { "type": "assistant_text", "content": "找到了错误位置，让我读取这个文件...", "annotation": "模型看到结果，决定下一步" },
+    { "type": "tool_call", "content": "login.ts", "toolName": "Read", "annotation": "第二轮工具调用" },
+    { "type": "tool_result", "content": "// login.ts\nfunction authenticate(token) {\n  if (isExpired(token)) {\n    throw new AuthError('token expired')\n  }\n  // missing: refresh logic\n}", "toolName": "Read", "annotation": "文件内容返回" },
+    { "type": "assistant_text", "content": "问题是缺少 token 刷新逻辑。让我修复它。", "annotation": "模型理解了 bug 原因" },
+    { "type": "tool_call", "content": "if (isExpired(token)) {\n  token = await refreshToken(token)\n  if (!token) throw new AuthError('refresh failed')\n}", "toolName": "Edit", "annotation": "Edit 工具调用修复代码" },
+    { "type": "tool_result", "content": "✓ File edited successfully", "toolName": "Edit", "annotation": "修复完成" },
+    { "type": "assistant_text", "content": "已修复 login.ts 中的认证 bug。问题是 token 过期后没有刷新逻辑，现在添加了 refreshToken 调用。", "annotation": "stop_reason='end_turn'，循环退出" }
   ]
 }

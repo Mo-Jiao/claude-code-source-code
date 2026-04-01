@@ -1,51 +1,16 @@
 {
   "version": "s04",
-  "title": "Subagents",
-  "description": "Agent spawns a subagent for isolated subtask execution",
+  "title": "权限瀑布",
+  "description": "工具调用经过六级权限检查的完整流程",
   "steps": [
-    {
-      "type": "user_message",
-      "content": "Refactor the calculator: split into modules and add tests",
-      "annotation": "Complex task suitable for delegation"
-    },
-    {
-      "type": "assistant_text",
-      "content": "I'll delegate the test writing to a subagent while I handle the refactoring.",
-      "annotation": "Agent decides to split work using the Task tool"
-    },
-    {
-      "type": "tool_call",
-      "content": "Write unit tests for calc.py covering all 4 operations and edge cases like division by zero",
-      "toolName": "task",
-      "annotation": "Task tool spawns a subagent with its own isolated context"
-    },
-    {
-      "type": "system_event",
-      "content": "[Subagent spawned] Context: fresh messages[], same tools, scoped prompt",
-      "annotation": "Subagent gets clean context -- no confusion from parent's conversation"
-    },
-    {
-      "type": "tool_result",
-      "content": "Created test_calc.py with 8 test cases. All passing.",
-      "toolName": "task",
-      "annotation": "Subagent completes and returns a summary to parent"
-    },
-    {
-      "type": "tool_call",
-      "content": "calc.py -> calc/operations.py, calc/cli.py",
-      "toolName": "write_file",
-      "annotation": "Parent continues with its own task: refactoring"
-    },
-    {
-      "type": "tool_result",
-      "content": "Files written successfully",
-      "toolName": "write_file",
-      "annotation": "Modules split"
-    },
-    {
-      "type": "assistant_text",
-      "content": "Refactored into calc/operations.py and calc/cli.py. Tests were written by a subagent and are all passing.",
-      "annotation": "Context isolation prevents confusion between tasks"
-    }
+    { "type": "tool_call", "content": "rm -rf node_modules/", "toolName": "Bash", "annotation": "模型请求执行一个潜在危险的命令" },
+    { "type": "system_event", "content": "Level 1: 工具风险分类\nBash → 'danger' (匹配 rm -rf 规则)", "annotation": "每个工具有静态风险等级" },
+    { "type": "system_event", "content": "Level 2: 权限模式检查\n当前模式: 'default' → 需要用户确认 'danger' 级操作", "annotation": "5 种模式: plan < default < auto-edit < full-auto < bypass" },
+    { "type": "system_event", "content": "Level 3: 会话级缓存\n未找到匹配的会话缓存 → 继续", "annotation": "用户之前未批准过类似命令" },
+    { "type": "system_event", "content": "Level 4: 企业策略检查\n无 managed settings 限制 → 继续", "annotation": "企业可通过 managed settings 硬性禁止" },
+    { "type": "system_event", "content": "Level 5: Hooks 检查\n未配置相关 PreToolUse hook → 继续", "annotation": "用户可通过 hooks 自动批准或拒绝" },
+    { "type": "system_event", "content": "Level 6: 用户确认\n⚠️ 「允许执行 rm -rf node_modules/?」\n[允许] [拒绝] [允许本次会话]", "annotation": "最终防线：交给用户决定" },
+    { "type": "user_message", "content": "[允许本次会话]", "annotation": "用户选择「允许本次会话」→ 缓存到 Level 3" },
+    { "type": "tool_result", "content": "✓ 已删除 node_modules/", "toolName": "Bash", "annotation": "权限通过，执行命令" }
   ]
 }

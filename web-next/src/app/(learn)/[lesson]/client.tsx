@@ -1,6 +1,7 @@
 "use client";
 
 import { DocRenderer } from "@/components/docs/doc-renderer";
+import { AgentLoopSimulator } from "@/components/simulator/agent-loop-simulator";
 import { Tabs } from "@/components/ui/tabs";
 
 interface LessonDetailClientProps {
@@ -24,11 +25,7 @@ export function LessonDetailClient({ lesson, learn, source, deepDive }: LessonDe
         {(activeTab) => (
           <>
             {activeTab === "learn" && <DocRenderer content={learn} />}
-            {activeTab === "simulate" && (
-              <div className="rounded-lg border border-zinc-200 p-8 text-center text-zinc-500 dark:border-zinc-700">
-                模拟器开发中...
-              </div>
-            )}
+            {activeTab === "simulate" && <AgentLoopSimulator version={lesson} />}
             {activeTab === "source" && <DocRenderer content={source} />}
             {activeTab === "deep-dive" && <DocRenderer content={deepDive} />}
           </>

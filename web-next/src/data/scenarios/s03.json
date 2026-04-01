@@ -1,53 +1,16 @@
 {
   "version": "s03",
-  "title": "TodoWrite",
-  "description": "Agent creates a visible plan before executing",
+  "title": "系统提示词组装",
+  "description": "展示系统提示词的六层组装过程和缓存策略",
   "steps": [
-    {
-      "type": "user_message",
-      "content": "Build a CLI calculator that supports add, subtract, multiply, divide",
-      "annotation": "A multi-step task that benefits from planning"
-    },
-    {
-      "type": "tool_call",
-      "content": "[\n  { \"id\": 1, \"task\": \"Create calc.py with argument parsing\", \"status\": \"in_progress\" },\n  { \"id\": 2, \"task\": \"Implement 4 operations\", \"status\": \"pending\" },\n  { \"id\": 3, \"task\": \"Add error handling\", \"status\": \"pending\" },\n  { \"id\": 4, \"task\": \"Test all operations\", \"status\": \"pending\" }\n]",
-      "toolName": "todo_write",
-      "annotation": "TodoManager creates a visible plan BEFORE any code is written"
-    },
-    {
-      "type": "tool_result",
-      "content": "Todo list created with 4 tasks",
-      "toolName": "todo_write",
-      "annotation": "The plan is now visible and trackable"
-    },
-    {
-      "type": "tool_call",
-      "content": "calc.py\n---\nimport sys\n\ndef calculate(op, a, b):\n    ops = {'+': a+b, '-': a-b, '*': a*b, '/': a/b}\n    return ops.get(op, 'Unknown operator')\n\nif __name__ == '__main__':\n    a, op, b = float(sys.argv[1]), sys.argv[2], float(sys.argv[3])\n    print(calculate(op, a, b))",
-      "toolName": "write_file",
-      "annotation": "Executing task #1 and #2: create file with operations"
-    },
-    {
-      "type": "tool_result",
-      "content": "File written successfully",
-      "toolName": "write_file",
-      "annotation": "Code written"
-    },
-    {
-      "type": "tool_call",
-      "content": "python calc.py 10 + 5",
-      "toolName": "bash",
-      "annotation": "Executing task #4: testing"
-    },
-    {
-      "type": "tool_result",
-      "content": "15.0",
-      "toolName": "bash",
-      "annotation": "Test passes"
-    },
-    {
-      "type": "assistant_text",
-      "content": "Calculator built and tested. All 4 operations work correctly.",
-      "annotation": "Visible plans improve task completion by making progress trackable"
-    }
+    { "type": "system_event", "content": "── 系统提示词组装开始 ──", "annotation": "每次 API 调用前，重新组装系统提示词" },
+    { "type": "system_event", "content": "Layer 1: 角色定义\n\"You are Claude Code, Anthropic's official CLI...\"", "annotation": "静态层 — 永不变化，100% 缓存命中" },
+    { "type": "system_event", "content": "Layer 2: 工具使用规范\n\"Use dedicated tools instead of Bash...\"", "annotation": "静态层 — 工具使用指南" },
+    { "type": "system_event", "content": "Layer 3: CLAUDE.md 内容\n\"# Project Rules\\n- Use TypeScript strict mode...\"", "annotation": "半静态层 — 文件变化时才更新" },
+    { "type": "system_event", "content": "Layer 4: Skills 列表\n\"Available skills: commit, review-pr, debug...\"", "annotation": "半静态层 — 只注入名称，不注入完整内容" },
+    { "type": "system_event", "content": "── cache_control: ephemeral ──\n以下内容不缓存", "annotation": "cache_control 断点 — 之后的内容每次都变" },
+    { "type": "system_event", "content": "Layer 5: Git 状态\n\"Branch: feat/auth, Modified: 3 files\"", "annotation": "动态层 — 每次请求都不同" },
+    { "type": "system_event", "content": "Layer 6: 环境信息\n\"OS: macOS, Shell: zsh, Date: 2026-04-01\"", "annotation": "动态层 — 运行时信息" },
+    { "type": "assistant_text", "content": "系统提示词组装完成。前 4 层约 12KB（缓存），后 2 层约 1KB（动态）。", "annotation": "缓存命中率接近 100% 的关键：静态前置 + 动态后置" }
   ]
 }

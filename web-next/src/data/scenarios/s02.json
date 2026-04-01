@@ -1,46 +1,15 @@
 {
   "version": "s02",
-  "title": "Tools",
-  "description": "Agent with read, write, edit, and bash tools",
+  "title": "工具分发",
+  "description": "工具注册、查找、权限检查与执行的完整流程",
   "steps": [
-    {
-      "type": "user_message",
-      "content": "Add a function called greet(name) to hello.py",
-      "annotation": "User requests a code modification"
-    },
-    {
-      "type": "assistant_text",
-      "content": "Let me read the current file first.",
-      "annotation": "Model chooses read_file instead of bash cat"
-    },
-    {
-      "type": "tool_call",
-      "content": "hello.py",
-      "toolName": "read_file",
-      "annotation": "Dedicated read tool provides cleaner file access"
-    },
-    {
-      "type": "tool_result",
-      "content": "print(\"Hello, World!\")",
-      "toolName": "read_file",
-      "annotation": "File contents returned to the model"
-    },
-    {
-      "type": "tool_call",
-      "content": "hello.py\n---\ndef greet(name):\n    print(f\"Hello, {name}!\")\n\ngreet(\"World\")",
-      "toolName": "write_file",
-      "annotation": "write_file replaces the entire file content"
-    },
-    {
-      "type": "tool_result",
-      "content": "File written successfully",
-      "toolName": "write_file",
-      "annotation": "Write confirmed"
-    },
-    {
-      "type": "assistant_text",
-      "content": "I've updated hello.py with a greet(name) function that takes a name parameter.",
-      "annotation": "4 tools beat 1: each tool has a clear, focused purpose"
-    }
+    { "type": "user_message", "content": "帮我在 utils.ts 里添加一个 formatDate 函数", "annotation": "用户请求触发工具选择" },
+    { "type": "assistant_text", "content": "让我先查看 utils.ts 的现有内容...", "annotation": "模型选择 Read 工具" },
+    { "type": "tool_call", "content": "src/utils.ts", "toolName": "Read", "annotation": "findToolByName('Read') → 权限检查 → 执行" },
+    { "type": "tool_result", "content": "export function formatNumber(n: number) {\n  return n.toLocaleString();\n}\n\nexport function capitalize(s: string) {\n  return s[0].toUpperCase() + s.slice(1);\n}", "toolName": "Read", "annotation": "Read 工具始终允许（只读操作）" },
+    { "type": "assistant_text", "content": "文件已有两个工具函数，我来添加 formatDate。", "annotation": "模型分析结果，决定编辑" },
+    { "type": "tool_call", "content": "在文件末尾添加:\n\nexport function formatDate(date: Date): string {\n  return date.toISOString().split('T')[0];\n}", "toolName": "Edit", "annotation": "findToolByName('Edit') → 权限检查（需用户确认）" },
+    { "type": "tool_result", "content": "✓ File edited: src/utils.ts", "toolName": "Edit", "annotation": "权限通过，编辑完成" },
+    { "type": "assistant_text", "content": "已添加 formatDate 函数到 utils.ts。", "annotation": "end_turn，循环结束" }
   ]
 }
