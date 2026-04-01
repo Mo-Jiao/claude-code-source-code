@@ -3,8 +3,6 @@ name: Deploy Tutorial to GitHub Pages
 on:
   push:
     branches: [main]
-    paths:
-      - 'tutorial/**'
   workflow_dispatch:
 
 permissions:
@@ -35,7 +33,7 @@ jobs:
         working-directory: tutorial
 
       - name: Build with VitePress
-        run: npm run build
+        run: npx vitepress build
         working-directory: tutorial
 
       - uses: actions/configure-pages@v4
