@@ -25,7 +25,7 @@ Philschmid 提出了一个精准的计算机类比来理解 Harness 的角色 [1
 | **OS** | Agent Harness | 管理上下文、处理"启动序列"（prompts/hooks）、提供标准驱动（工具处理） |
 | **App** | Agent | 运行在 OS 之上的用户逻辑 |
 
-这个类比最早由 Andrej Karpathy 在 2025 年 6 月提出核心思路——"LLM 是 CPU，上下文窗口是 RAM，而你是负责为每个任务加载正确信息的操作系统" [6]。Philschmid 将其进一步发展，明确了 Harness 就是这个 OS 层。
+这个类比最早由 Andrej Karpathy 在 2023 年底首次提出核心思路——"LLM 是 CPU，上下文窗口是 RAM，而你是负责为每个任务加载正确信息的操作系统"，并在 2025 年 6 月的 AI Startup School 演讲中再次详细阐述 [6]。Philschmid 将其进一步发展，明确了 Harness 就是这个 OS 层。
 
 ### 演进路径：Prompt → Context → Harness
 

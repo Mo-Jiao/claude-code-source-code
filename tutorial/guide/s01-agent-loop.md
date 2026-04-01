@@ -477,7 +477,7 @@ if __name__ == "__main__":
 | 上下文获取 | `src/context.ts` | `getUserContext()`, `getSystemContext()`, git 信息 |
 | 系统提示词构建 | `src/utils/queryContext.ts` | `fetchSystemPromptParts()` 并发获取三大部分 |
 | 工具执行 | `src/services/tools/toolOrchestration.ts` | `runTools()` 并发/串行执行 |
-| 消息类型 | `src/types/message.ts` | `Message` 联合类型定义 |
+| 消息类型 | `src/types/` 目录下多个文件 | `Message` 联合类型定义（分布在多个类型文件中） |
 | 自动压缩 | `src/services/compact/autoCompact.ts` | token 超限时自动触发 |
 | 流式 API 调用 | `src/services/api/claude.ts` | 封装 Anthropic API 流式调用 |
 
@@ -499,7 +499,7 @@ Agent 的 TUI 需要同时显示：流式输出的文本、工具执行进度、
 
 ### Harness 优势："苦涩教训" 哲学
 
-Claude Code 团队践行 Boris Cherny 提出的 "苦涩教训"（The Bitter Lesson）哲学：**每次新模型发布，删掉一半 prompt**。
+Claude Code 团队践行 Rich Sutton 提出的 "苦涩教训"（The Bitter Lesson）哲学（团队工程师 Boris Cherny 的实践总结）：**每次新模型发布，删掉一半 prompt**。
 
 这与 Cursor 等竞品形成鲜明对比：
 

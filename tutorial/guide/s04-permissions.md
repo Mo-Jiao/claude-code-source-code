@@ -622,7 +622,7 @@ Dev.to 上的安全讨论总结得很清楚："Default-deny isn't paranoia; it's
 
 ### 自评估偏差：权限是质量特性，不是安全特性
 
-Anthropic 发现了一个关键问题：**当你让 Agent 评估自己的输出时，它几乎总是会批准** [R1-5]。这被称为"自评估偏差"。
+LLM 领域存在已知的自我一致性偏差（self-consistency bias）：**当你让 Agent 评估自己的输出时，它几乎总是会批准** [R1-5]。Anthropic 在其 harness 设计实践中也强调了这一问题。
 
 这意味着 Claude Code 的权限系统和 Hooks 机制不是可选的"安全特性"，而是**对抗模型固有偏差的质量必需品**。没有外部约束，Agent 会系统性地高估自己输出的质量。
 
